@@ -53,9 +53,9 @@ You should see two containers running:
 
 Copy the Container ID from the PostgreSQL container.
 
-## Step 7: Run the injection.py script
+## Step 7: Run the etl.py script
 
-    docker-compose run --rm web python data/injection.py
+    docker-compose run --rm web python -m scripts.etl
 
 Replace <postgres_container_name> with the container ID you just copied.
 
