@@ -1,40 +1,67 @@
-from fastapi import FastAPI, BackgroundTasks, Depends, Query
+from fastapi import FastAPI, BackgroundTasks, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from models import Base, Movie_Info, Production_Info, Rating_Info, EtlMetadata
 from database import engine, get_db
+from mongodb_database import connect_to_mongo, close_mongo_connection, get_mongo_database
 from scripts.etl import run_etl
 from scripts.services.movie_service import MovieService
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from contextlib import asynccontextmanager
+import json
 
-app = FastAPI(title="Movie Database API", version="2.0.0")
-
-# Crear las tablas al iniciar
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     Base.metadata.create_all(bind=engine)
+    await connect_to_mongo()
+    yield
+    # Shutdown
+    await close_mongo_connection()
+
+app = FastAPI(
+    title="Movie Database API - PostgreSQL + MongoDB", 
+    version="3.0.0",
+    lifespan=lifespan
+)
 
 @app.get('/')
 def root():
     return {
-        "message": "API is running",
+        "message": "API is running with PostgreSQL and MongoDB",
+        "databases": {
+            "postgresql": "Primary relational database",
+            "mongodb": "Document database for JSON data"
+        },
         "endpoints": {
-            "test_db": "/test-db",
-            "run_etl": "POST /run-etl",
-            "run_etl_async": "POST /run-etl-async",
-            "movies": "/movies",
-            "top_movies": "/api/movies/top-rated",
-            "movies_by_year": "/api/movies/by-year/{start_year}/{end_year}",
-            "statistics": "/api/movies/statistics",
-            "search": "/api/movies/search",
+            "postgresql": {
+                "test_db": "/test-db",
+                "run_etl": "POST /run-etl",
+                "run_etl_async": "POST /run-etl-async",
+                "movies": "/movies",
+                "top_movies": "/api/movies/top-rated",
+                "movies_by_year": "/api/movies/by-year/{start_year}/{end_year}",
+                "statistics": "/api/movies/statistics",
+                "search": "/api/movies/search"
+            },
+            "mongodb": {
+                "test_mongodb": "/test-mongodb",
+                "mongo_movies": "/mongo/movies",
+                "mongo_search": "/mongo/search",
+                "mongo_stats": "/mongo/stats",
+                "mongo_aggregations": "/mongo/aggregations",
+                "sync_to_mongo": "POST /mongo/sync"
+            },
             "documentation": "/docs"
         }
     }
 
-# Testing database connection and querying some data
+# ============= PostgreSQL Endpoints (Original) =============
+
 @app.get('/test-db')
 def test_database(db: Session = Depends(get_db)):
     try:
         return {
+            'database': 'PostgreSQL',
             'connected': True,
             'movie_info': db.query(Movie_Info).count(),
             'production_info': db.query(Production_Info).count(),
@@ -42,9 +69,8 @@ def test_database(db: Session = Depends(get_db)):
             'etl_metadata': db.query(EtlMetadata).count()
         }
     except Exception as e:
-        return {'connected': False, 'error': str(e)}
+        return {'database': 'PostgreSQL', 'connected': False, 'error': str(e)}
 
-# Data ingestion
 @app.post('/run-etl')
 def execute_etl():
     try:
@@ -53,7 +79,6 @@ def execute_etl():
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
 
-# Mode asynchronous
 @app.post('/run-etl-async')
 def execute_etl_async(background_tasks: BackgroundTasks):
     try:
@@ -67,14 +92,12 @@ def get_movies(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     movies = db.query(Movie_Info).offset(skip).limit(limit).all()
     return movies
 
-# NUEVOS ENDPOINTS USANDO EL SERVICIO
-
 @app.get("/api/movies/top-rated")
 def get_top_rated_movies(
     limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    """Obtiene las películas mejor calificadas con toda su información"""
+    """Get top rated movies from PostgreSQL"""
     service = MovieService(db)
     return service.get_top_movies_by_rating(limit)
 
@@ -84,25 +107,25 @@ def get_movies_by_year_range(
     end_year: int,
     db: Session = Depends(get_db)
 ):
-    """Obtiene películas dentro de un rango de años"""
+    """Get movies by year range from PostgreSQL"""
     service = MovieService(db)
     return service.get_movies_by_year_range(start_year, end_year)
 
 @app.get("/api/movies/statistics")
 def get_movie_statistics(db: Session = Depends(get_db)):
-    """Obtiene estadísticas completas de la base de datos"""
+    """Get statistics from PostgreSQL"""
     service = MovieService(db)
     return service.get_movie_statistics()
 
 @app.get("/api/movies/search")
 def search_movies(
-    title: Optional[str] = Query(None, description="Título de la película"),
-    min_year: Optional[int] = Query(None, description="Año mínimo"),
-    max_year: Optional[int] = Query(None, description="Año máximo"),
-    min_rating: Optional[float] = Query(None, ge=0, le=10, description="Rating mínimo"),
+    title: Optional[str] = Query(None, description="Movie title"),
+    min_year: Optional[int] = Query(None, description="Minimum year"),
+    max_year: Optional[int] = Query(None, description="Maximum year"),
+    min_rating: Optional[float] = Query(None, ge=0, le=10, description="Minimum rating"),
     db: Session = Depends(get_db)
 ):
-    """Búsqueda avanzada de películas con múltiples filtros"""
+    """Advanced search in PostgreSQL"""
     service = MovieService(db)
     return service.search_movies_advanced(
         title=title,
@@ -110,6 +133,284 @@ def search_movies(
         max_year=max_year,
         min_rating=min_rating
     )
+
+# ============= MongoDB Endpoints (New) =============
+
+@app.get('/test-mongodb')
+async def test_mongodb():
+    """Test MongoDB connection"""
+    try:
+        db = get_mongo_database()
+        if db is None:
+            return {'database': 'MongoDB', 'connected': False, 'error': 'Database not initialized'}
+        
+        count = await db.movies.count_documents({})
+        collections = await db.list_collection_names()
+        
+        return {
+            'database': 'MongoDB',
+            'connected': True,
+            'collections': collections,
+            'movies_count': count
+        }
+    except Exception as e:
+        return {'database': 'MongoDB', 'connected': False, 'error': str(e)}
+
+@app.get('/mongo/movies')
+async def get_mongo_movies(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    sort_by: str = Query("year", description="Field to sort by"),
+    order: str = Query("desc", description="asc or desc")
+):
+    """Get movies from MongoDB"""
+    db = get_mongo_database()
+    
+    sort_order = -1 if order == "desc" else 1
+    
+    cursor = db.movies.find().sort(sort_by, sort_order).skip(skip).limit(limit)
+    movies = []
+    
+    async for movie in cursor:
+        movie["_id"] = str(movie["_id"])
+        movies.append(movie)
+    
+    total = await db.movies.count_documents({})
+    
+    return {
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "data": movies
+    }
+
+@app.get('/mongo/search')
+async def search_mongo_movies(
+    q: str = Query(None, description="Search query"),
+    title: Optional[str] = Query(None, description="Title filter"),
+    director: Optional[str] = Query(None, description="Director filter"),
+    country: Optional[str] = Query(None, description="Country filter"),
+    min_year: Optional[int] = Query(None, description="Minimum year"),
+    max_year: Optional[int] = Query(None, description="Maximum year"),
+    min_rating: Optional[float] = Query(None, ge=0, le=10),
+    limit: int = Query(10, ge=1, le=100)
+):
+    """Search movies in MongoDB with multiple filters"""
+    db = get_mongo_database()
+    
+    # Build query
+    query_filter = {}
+    
+    if q:
+        # General text search
+        query_filter["$or"] = [
+            {"title": {"$regex": q, "$options": "i"}},
+            {"description": {"$regex": q, "$options": "i"}},
+            {"director": {"$regex": q, "$options": "i"}}
+        ]
+    
+    if title:
+        query_filter["title"] = {"$regex": title, "$options": "i"}
+    
+    if director:
+        query_filter["director"] = {"$regex": director, "$options": "i"}
+    
+    if country:
+        query_filter["country"] = {"$regex": country, "$options": "i"}
+    
+    if min_year or max_year:
+        year_filter = {}
+        if min_year:
+            year_filter["$gte"] = min_year
+        if max_year:
+            year_filter["$lte"] = max_year
+        query_filter["year"] = year_filter
+    
+    if min_rating:
+        query_filter["avg_vote"] = {"$gte": min_rating}
+    
+    cursor = db.movies.find(query_filter).limit(limit)
+    results = []
+    
+    async for movie in cursor:
+        movie["_id"] = str(movie["_id"])
+        results.append(movie)
+    
+    return {
+        "query": query_filter,
+        "count": len(results),
+        "results": results
+    }
+
+@app.get('/mongo/stats')
+async def get_mongo_stats():
+    """Get aggregated statistics from MongoDB"""
+    db = get_mongo_database()
+    
+    # Total movies
+    total_movies = await db.movies.count_documents({})
+    
+    # Movies by year
+    year_pipeline = [
+        {"$match": {"year": {"$ne": None}}},
+        {"$group": {"_id": "$year", "count": {"$sum": 1}}},
+        {"$sort": {"_id": -1}},
+        {"$limit": 10}
+    ]
+    
+    year_stats = []
+    async for doc in db.movies.aggregate(year_pipeline):
+        year_stats.append({"year": doc["_id"], "count": doc["count"]})
+    
+    # Top rated movies
+    top_rated_pipeline = [
+        {"$match": {"avg_vote": {"$ne": None}}},
+        {"$sort": {"avg_vote": -1}},
+        {"$limit": 10},
+        {"$project": {"title": 1, "year": 1, "avg_vote": 1, "_id": 0}}
+    ]
+    
+    top_rated = []
+    async for doc in db.movies.aggregate(top_rated_pipeline):
+        top_rated.append(doc)
+    
+    # Average rating
+    avg_rating_pipeline = [
+        {"$match": {"avg_vote": {"$ne": None}}},
+        {"$group": {"_id": None, "avg_rating": {"$avg": "$avg_vote"}}}
+    ]
+    
+    avg_rating_cursor = db.movies.aggregate(avg_rating_pipeline)
+    avg_rating_result = await avg_rating_cursor.next()
+    avg_rating = avg_rating_result["avg_rating"] if avg_rating_result else 0
+    
+    return {
+        "total_movies": total_movies,
+        "average_rating": round(avg_rating, 2),
+        "movies_by_year": year_stats,
+        "top_rated_movies": top_rated
+    }
+
+@app.get('/mongo/aggregations')
+async def get_mongo_aggregations():
+    """Complex aggregations from MongoDB"""
+    db = get_mongo_database()
+    
+    # Directors with most movies
+    directors_pipeline = [
+        {"$match": {"director": {"$ne": None}}},
+        {"$group": {"_id": "$director", "movie_count": {"$sum": 1}, "avg_rating": {"$avg": "$avg_vote"}}},
+        {"$sort": {"movie_count": -1}},
+        {"$limit": 10}
+    ]
+    
+    directors = []
+    async for doc in db.movies.aggregate(directors_pipeline):
+        director_name = doc["_id"]
+        if director_name.startswith('"') or director_name.startswith('['):
+            try:
+                director_name = json.loads(director_name)
+                if isinstance(director_name, list):
+                    director_name = ", ".join(director_name)
+            except:
+                pass
+        
+        directors.append({
+            "director": director_name,
+            "movie_count": doc["movie_count"],
+            "avg_rating": round(doc["avg_rating"], 2) if doc["avg_rating"] else None
+        })
+    
+    # Movies by duration range
+    duration_pipeline = [
+        {"$match": {"duration": {"$ne": None}}},
+        {"$bucket": {
+            "groupBy": "$duration",
+            "boundaries": [0, 60, 90, 120, 150, 180, 300],
+            "default": "300+",
+            "output": {
+                "count": {"$sum": 1},
+                "titles": {"$push": "$title"}
+            }
+        }}
+    ]
+    
+    duration_ranges = []
+    async for doc in db.movies.aggregate(duration_pipeline):
+        range_label = f"{doc['_id']}-{doc['_id']+30} min" if doc['_id'] != "300+" else "300+ min"
+        duration_ranges.append({
+            "range": range_label,
+            "count": doc["count"],
+            "sample_titles": doc["titles"][:3]
+        })
+    
+    return {
+        "top_directors": directors,
+        "movies_by_duration": duration_ranges
+    }
+
+@app.post('/mongo/sync')
+async def sync_postgres_to_mongo(db: Session = Depends(get_db)):
+    """Sync data from PostgreSQL to MongoDB"""
+    try:
+        mongo_db = get_mongo_database()
+        
+        # Get all movies from PostgreSQL
+        movies = db.query(Movie_Info).all()
+        productions = db.query(Production_Info).all()
+        ratings = db.query(Rating_Info).all()
+        
+        # Create lookup dictionaries
+        prod_dict = {p.imdb_title_id: p for p in productions}
+        rating_dict = {r.imdb_title_id: r for r in ratings}
+        
+        # Prepare documents for MongoDB
+        documents = []
+        for movie in movies:
+            doc = {
+                "imdb_title_id": movie.imdb_title_id,
+                "title": movie.title,
+                "year": movie.year,
+                "duration": movie.duration,
+                "description": movie.description
+            }
+            
+            # Add production info
+            if movie.imdb_title_id in prod_dict:
+                prod = prod_dict[movie.imdb_title_id]
+                doc.update({
+                    "director": prod.director,
+                    "writer": prod.writer,
+                    "production_company": prod.production_company,
+                    "actors": prod.actors,
+                    "country": prod.country,
+                    "language": prod.language
+                })
+            
+            # Add rating info
+            if movie.imdb_title_id in rating_dict:
+                rating = rating_dict[movie.imdb_title_id]
+                doc.update({
+                    "avg_vote": rating.avg_vote,
+                    "votes": rating.votes,
+                    "reviews_from_users": rating.reviews_from_users,
+                    "reviews_from_critics": rating.reviews_from_critics
+                })
+            
+            documents.append(doc)
+        
+        # Clear existing data and insert new
+        await mongo_db.movies.delete_many({})
+        if documents:
+            await mongo_db.movies.insert_many(documents)
+        
+        return {
+            "status": "success",
+            "message": f"Synced {len(documents)} movies from PostgreSQL to MongoDB"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
