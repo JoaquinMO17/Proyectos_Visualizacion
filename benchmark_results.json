@@ -1,0 +1,24 @@
+{
+  "total_records": 85736,
+  "total_duration_seconds": 680.2779054641724,
+  "total_duration_minutes": 11.33796509106954,
+  "records_per_second": 126.0308460870855,
+  "baseline_memory_mb": 98.45703125,
+  "peak_memory_mb": 254.51953125,
+  "total_memory_delta_mb": 156.0625,
+  "memory_efficiency_mb_per_1k_records": 1.820268032098535,
+  "phases": [
+    {
+      "name": "Complete ETL",
+      "start_time": 1758827184.5958767,
+      "start_memory_mb": 98.45703125,
+      "start_cpu": 0.0,
+      "end_time": 1758827864.873007,
+      "end_memory_mb": 254.51953125,
+      "duration_seconds": 680.2771303653717,
+      "memory_delta_mb": 156.0625,
+      "peak_memory_mb": 254.51953125
+    }
+  ],
+  "timestamp": "2025-09-25T19:17:44.873754"
+}
