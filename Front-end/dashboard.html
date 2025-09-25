@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard · Movies Pastel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<style>
+  :root{
+    /* Tema claro pastel, plano */
+    --bg:#fafbff;
+    --panel:#ffffff;
+    --border:#e9edf4;
+    --ink:#1f2937;
+    --muted:#6b7280;
+
+    /* Pastel */
+    --pastel-indigo:#c7d2fe;   /* barras base */
+    --pastel-blue:#93c5fd;     /* línea */
+    --pastel-mint:#bbf7d0;     /* highlight/selección */
+    --pastel-violet:#ddd6fe;   /* hover nav oli */ 
+
+    --accent-text:#4f46e5;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    overflow:hidden; /* solo scrollea el área principal */
+  }
+
+  /* Layout con sidebar fijo */
+  .shell{display:grid; grid-template-columns: 250px 1fr; height:100vh;}
+  .sidebar{
+    position:sticky; top:0; height:100vh; overflow:auto;
+    background:var(--panel); border-right:1px solid var(--border);
+    padding:16px; display:flex; flex-direction:column; gap:14px;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
+  .brand .logo{
+    width:28px;height:28px;border:1px solid var(--border);border-radius:8px;
+    display:grid;place-items:center;color:var(--accent-text);
+  }
+  .group-title{font-size:12px; color:var(--muted); margin:12px 10px 4px}
+  .nav{display:flex; flex-direction:column; gap:6px}
+  .nav a{
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    text-decoration:none; color:var(--ink);
+    border:1px solid transparent; border-radius:10px; font-size:14px; cursor:pointer;
+  }
+  .nav a:hover{background:var(--pastel-violet)}
+  .nav a.active{background:#eef2ff; color:var(--accent-text); border-color:#e0e7ff}
+  .ico{width:16px;height:16px;color:currentColor}
+
+  /* Columna derecha: topbar fijo + contenido scroll */
+  .content{display:flex; flex-direction:column; height:100vh; overflow:hidden;}
+  .topbar{
+    background:var(--panel); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; flex:0 0 auto;
+  }
+  .search{
+    border:1px solid var(--border); border-radius:10px; padding:8px 10px; width:320px;
+    display:flex; align-items:center; gap:8px; color:var(--muted);
+  }
+  .search input{border:none; outline:none; width:100%; background:transparent; color:var(--ink)}
+  .user{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:14px}
+
+  .main{padding:18px; display:grid; grid-template-columns: 1fr; gap:16px; max-width:1500px;
+        overflow:auto; flex:1 1 auto;}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px;}
+  .head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
+  .title{font-size:18px; font-weight:800; display:flex; align-items:center; gap:10px}
+  .badge{border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--muted)}
+
+  .kpis{display:grid; gap:12px; grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:1000px){ .kpis{ grid-template-columns:repeat(2,minmax(0,1fr)) } }
+  .kpi{border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; gap:12px; align-items:center; background:#fff}
+  .kpi .icon{width:36px;height:36px;border:1px solid var(--border);border-radius:10px;display:grid;place-items:center}
+  .kpi .value{font-size:22px;font-weight:700}
+  .kpi .label{font-size:12px;color:var(--muted)}
+
+  .controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+  .controls input,.controls select{
+    border:1px solid var(--border); border-radius:10px; padding:8px 10px;
+    background:#fff; color:var(--ink); font-size:14px;
+  }
+  /* Chips toggle */
+  .chip-toggle{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border);
+    padding:6px 10px; border-radius:999px; font-size:12px; user-select:none; cursor:pointer}
+  .chip-toggle input{accent-color:#4f46e5; width:14px; height:14px}
+
+  .split{display:grid; grid-template-columns: 2fr 1fr; gap:14px}
+  @media (max-width:1100px){ .split{ grid-template-columns:1fr } }
+
+  .chart-box{height:360px}
+  canvas{width:100%!important; height:100%!important}
+
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{padding:10px; border-bottom:1px solid var(--border)}
+  th{color:var(--muted); text-align:left; font-weight:700}
+  tbody tr.selected{background:var(--pastel-mint)}
+  tbody tr:hover{background:#f8fafc}
+
+  /* sin animaciones globales */
+  .card, .nav a, button, input, select{transition:none}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar (decorativo) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="10" width="4" height="10"></rect>
+          <rect x="10" y="6" width="4" height="14"></rect>
+          <rect x="17" y="3" width="4" height="17"></rect>
+        </svg>
+      </div>
+      Movies Pastel
+    </div>
+
+    <div>
+      <div class="group-title">Inicio</div>
+      <nav class="nav" id="nav">
+        <a class="active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>Panel</a>
+        <a><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>Analítica</a>
+        <a><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 8h10M7 12h6"/></svg>Reportes</a>
+        <a><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>Equipo</a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Columna derecha -->
+  <section class="content">
+    <div class="topbar">
+      <div class="search">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-3.5-3.5"/>
+        </svg>
+        <input type="text" placeholder="Buscar" />
+      </div>
+      <div class="user">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+        </svg>
+        Admin
+      </div>
+    </div>
+
+    <main class="main">
+      <!-- KPIs -->
+      <section class="card">
+        <div class="head">
+          <div class="title">Estadísticas generales</div>
+        </div>
+        <div class="kpis" id="kpi-stats"></div>
+      </section>
+
+      <!-- Productoras -->
+      <section class="card" id="card-companies">
+        <div class="head">
+          <div class="title">Principales productoras <span id="chip-count" class="badge"></span></div>
+          <div class="badge" id="chip-summary">—</div>
+        </div>
+        <div class="controls">
+          <input type="number" id="company-limit" value="10" min="5" max="50" title="Límite"/>
+          <input type="search" id="company-search" placeholder="Filtrar compañía…"/>
+          <label class="chip-toggle"><input type="checkbox" id="toggle-normalize"> Normalizar línea</label>
+          <label class="chip-toggle"><input type="checkbox" id="toggle-invert"> Invertir eje derecho</label>
+        </div>
+        <div class="split">
+          <div class="chart-box"><canvas id="companiesChart"></canvas></div>
+          <div class="table-wrap">
+            <table id="companiesTable">
+              <thead><tr><th>Compañía</th><th>Películas</th><th>Prom.</th></tr></thead>
+              <tbody><tr><td colspan="3" style="color:var(--muted)">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Distribución de calificaciones -->
+      <section class="card">
+        <div class="head"><div class="title">Distribución de calificaciones</div></div>
+        <div class="chart-box"><canvas id="ratingDistChart"></canvas></div>
+      </section>
+
+      <!-- Películas por país -->
+      <section class="card">
+        <div class="head"><div class="title">Películas por país</div></div>
+        <div class="controls">
+          <input type="number" id="year-from" value="2010" title="Desde"/>
+          <input type="number" id="year-to" value="2020" title="Hasta"/>
+          <select id="country-top">
+            <option value="15">Top 15</option>
+            <option value="20">Top 20</option>
+            <option value="30">Top 30</option>
+          </select>
+        </div>
+        <div class="chart-box"><canvas id="countryChart"></canvas></div>
+      </section>
+
+      <!-- Tendencias -->
+      <section class="card">
+        <div class="head"><div class="title">Tendencias de calificación</div></div>
+        <div class="controls">
+          <input type="number" id="trend-start" value="2000" title="Desde"/>
+          <input type="number" id="trend-end" value="2023" title="Hasta"/>
+        </div>
+        <div class="chart-box" style="height:380px"><canvas id="trendsChart"></canvas></div>
+      </section>
+
+      <!-- Idiomas -->
+      <section class="card">
+        <div class="head"><div class="title">Idiomas</div></div>
+        <div class="chart-box"><canvas id="languageChart"></canvas></div>
+      </section>
+
+      <!-- Directores -->
+      <section class="card">
+        <div class="head"><div class="title">Directores destacados</div></div>
+        <div class="controls">
+          <select id="director-sort">
+            <option value="avg_rating">Por calificación</option>
+            <option value="movie_count">Por número de películas</option>
+            <option value="total_votes">Por votos totales</option>
+          </select>
+        </div>
+        <div class="chart-box"><canvas id="directorsChart"></canvas></div>
+      </section>
+
+      <!-- Duración vs Calificación -->
+      <section class="card">
+        <div class="head"><div class="title">Duración vs calificación</div></div>
+        <div class="chart-box"><canvas id="durationChart"></canvas></div>
+      </section>
+
+      <!-- Top películas -->
+      <section class="card">
+        <div class="head"><div class="title">Películas mejor valoradas</div></div>
+        <div class="controls">
+          <input type="number" id="min-votes" value="5000" title="Votos mínimos"/>
+        </div>
+        <div class="table-wrap">
+          <table id="topMoviesTable">
+            <thead><tr><th>Título</th><th>Año</th><th>Calif.</th><th>Votos</th></tr></thead>
+            <tbody><tr><td colspan="4" style="color:var(--muted)">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </section>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+  Chart.defaults.animation = false; // sin animaciones
+
+  /* ---------- ICONOS sencillos para KPIs ---------- */
+  const ICON = {
+    star:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"/></svg>`,
+    users:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`,
+    money:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 8v8"/></svg>`,
+    trend:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M19 9l-6 6-4-4-5 5"/></svg>`
+  };
+
+  /* ---------- Helpers charts (in-place, sin destroy) ---------- */
+  const charts = {};
+  function ensureChart(id, configFactory){
+    if (!charts[id]) {
+      const ctx = document.getElementById(id).getContext('2d');
+      charts[id] = new Chart(ctx, configFactory());
+    }
+    return charts[id];
+  }
+  function updateChart(id, updater){
+    const c = charts[id];
+    if (c) { updater(c); c.update('none'); }
+  }
+
+  /* ---------- KPIs ---------- */
+  async function loadStatistics(){
+    const { data } = await axios.get(`${API_BASE}/api/ratings/statistics`);
+    const el = document.getElementById('kpi-stats');
+    el.innerHTML = `
+      <div class="kpi"><div class="icon">${ICON.star}</div><div><div class="value">${(data.overall_avg_rating||0).toFixed(1)}</div><div class="label">Calificación media</div></div></div>
+      <div class="kpi"><div class="icon">${ICON.users}</div><div><div class="value">${(data.total_user_reviews||0).toLocaleString()}</div><div class="label">Reseñas de usuarios</div></div></div>
+      <div class="kpi"><div class="icon">${ICON.money}</div><div><div class="value">${(data.total_votes||0).toLocaleString()}</div><div class="label">Total de votos</div></div></div>
+      <div class="kpi"><div class="icon">${ICON.trend}</div><div><div class="value">${(data.median_rating||0).toFixed(1)}</div><div class="label">Mediana</div></div></div>
+    `;
+  }
+
+  /* ---------- Productoras ---------- */
+  let companiesAll = [];
+  let companiesView = [];
+  let companiesAvgOriginal = []; // para tooltip al normalizar
+  let normalizeLine = false;
+  let invertRight = false;
+
+  function computeRatingRange(values){
+    if(values.length===0) return [0,10];
+    const min = Math.min(...values), max = Math.max(...values);
+    const pad = 0.3;
+    return [Math.max(0,min-pad), Math.min(10,max+pad)];
+  }
+
+  function pearson(x,y){
+    const n=x.length; if(n===0) return 0;
+    const mx=x.reduce((a,b)=>a+b,0)/n, my=y.reduce((a,b)=>a+b,0)/n;
+    let num=0,dx=0,dy=0;
+    for(let i=0;i<n;i++){ const a=x[i]-mx,b=y[i]-my; num+=a*b; dx+=a*a; dy+=b*b; }
+    return (dx&&dy) ? (num/Math.sqrt(dx*dy)) : 0;
+  }
+
+  function renderCompaniesTable(selected=-1){
+    const tb = document.querySelector('#companiesTable tbody');
+    tb.innerHTML = companiesView.map((r,i)=>`
+      <tr class="${i===selected?'selected':''}" data-idx="${i}">
+        <td>${r.production_company}</td>
+        <td>${r.movie_count}</td>
+        <td>${(r.avg_rating||0).toFixed(1)}</td>
+      </tr>
+    `).join('');
+    tb.querySelectorAll('tr').forEach(tr=>{
+      tr.addEventListener('click',()=>{
+        const idx = +tr.getAttribute('data-idx');
+        highlightCompanyBar(idx);
+        renderCompaniesTable(idx);
+      });
+    });
+
+    // chips resumen
+    document.getElementById('chip-count').textContent = `${companiesView.length} mostradas`;
+    const total = companiesView.reduce((s,x)=>s+(x.movie_count||0),0);
+    const avg = companiesView.reduce((s,x)=>s+(x.avg_rating||0),0)/Math.max(1,companiesView.length);
+    const r = pearson(companiesView.map(d=>d.movie_count), companiesView.map(d=>d.avg_rating||0));
+    document.getElementById('chip-summary').textContent =
+      `Películas: ${total.toLocaleString()} • Prom.: ${avg.toFixed(2)} • r=${r.toFixed(2)}`;
+  }
+
+  function highlightCompanyBar(idx){
+    const c = charts['companiesChart'];
+    if(!c) return;
+    const n = c.data.datasets[0].data.length;
+    const baseBg = 'rgba(199,210,254,.9)';
+    const baseBd = 'rgba(199,210,254,1)';
+    const hiBg   = 'rgba(187,247,208,1)';
+    const hiBd   = 'rgba(187,247,208,1)';
+    c.data.datasets[0].backgroundColor = Array.from({length:n},(_,i)=> i===idx?hiBg:baseBg);
+    c.data.datasets[0].borderColor     = Array.from({length:n},(_,i)=> i===idx?hiBd:baseBd);
+    c.update('none');
+  }
+
+  function updateCompaniesChart(){
+    const labels = companiesView.map(d=>d.production_company);
+    const movies = companiesView.map(d=>d.movie_count);
+    const avgs   = companiesView.map(d=>d.avg_rating||0);
+    companiesAvgOriginal = avgs.slice();
+    const [ymin,ymax] = computeRatingRange(avgs);
+    const maxMovies = Math.max(1, ...movies);
+    const denom = Math.max(1e-6, ymax - ymin);
+    const scaled = avgs.map(v => (v - ymin) / denom * maxMovies); // para “Normalizar”
+
+    ensureChart('companiesChart', ()=>({
+      type:'bar',
+      data:{ labels:[], datasets:[
+        { label:'Películas', data:[], backgroundColor:[], borderColor:[], borderWidth:1, yAxisID:'y' },
+        { label:'Promedio',  data:[], type:'line', borderColor:'rgba(147,197,253,1)', backgroundColor:'rgba(147,197,253,0.10)', borderWidth:2, pointRadius:2, tension:0.25, yAxisID:'y1' }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ usePointStyle:true } },
+          tooltip:{ enabled:true, callbacks:{ label:(ctx)=>{
+            if(ctx.datasetIndex===1){
+              const real = companiesAvgOriginal[ctx.dataIndex] ?? ctx.formattedValue;
+              return normalizeLine ? `Promedio: ${real.toFixed(2)} (esc.)` : `Promedio: ${real.toFixed(2)}`;
+            }
+            return `${ctx.dataset.label}: ${ctx.formattedValue}`;
+          } } }
+        },
+        scales:{
+          x:{ display:false },
+          y:{ beginAtZero:true, title:{display:true, text:'Películas'} },
+          y1:{ position:'right', grid:{ drawOnChartArea:false }, min:0, max:10, title:{display:true, text:'Calif. promedio'} }
+        }
+      }
+    }));
+
+    updateChart('companiesChart', (c)=>{
+      c.data.labels = labels;
+      c.data.datasets[0].data = movies;
+      c.data.datasets[0].backgroundColor = labels.map(()=> 'rgba(199,210,254,.9)');
+      c.data.datasets[0].borderColor     = labels.map(()=> 'rgba(199,210,254,1)');
+
+      if(normalizeLine){
+        c.data.datasets[1].data = scaled;
+        c.data.datasets[1].yAxisID = 'y';
+        c.options.scales.y1.display = false;
+      }else{
+        c.data.datasets[1].data = avgs;
+        c.data.datasets[1].yAxisID = 'y1';
+        c.options.scales.y1.display = true;
+        c.options.scales.y1.min = ymin;
+        c.options.scales.y1.max = ymax;
+        c.options.scales.y1.reverse = invertRight;
+      }
+    });
+
+    // click -> resalta fila
+    const canvas = document.getElementById('companiesChart');
+    canvas.onclick = (evt)=>{
+      const p = charts['companiesChart'].getElementsAtEventForMode(evt,'nearest',{intersect:true},true)[0];
+      if(!p) return renderCompaniesTable(-1);
+      renderCompaniesTable(p.index);
+      highlightCompanyBar(p.index);
+    };
+  }
+
+  function applyCompanyFilter(){
+    const q = (document.getElementById('company-search').value||'').toLowerCase().trim();
+    companiesView = !q ? [...companiesAll] : companiesAll.filter(x => (x.production_company||'').toLowerCase().includes(q));
+    updateCompaniesChart();
+    renderCompaniesTable(-1);
+  }
+
+  async function loadProductionCompanies(){
+    const limit = +(document.getElementById('company-limit').value||10);
+    const { data } = await axios.get(`${API_BASE}/api/production/companies?limit=${limit}`);
+    companiesAll = data;
+    companiesView = [...companiesAll];
+    document.getElementById('company-search').value = '';
+    updateCompaniesChart();
+    renderCompaniesTable();
+  }
+
+  /* ---------- Distribución ---------- */
+  async function loadRatingDistribution(){
+    const { data } = await axios.get(`${API_BASE}/api/ratings/distribution`);
+    const labels = data.map(d=>d.rating_range);
+    const counts = data.map(d=>d.movie_count);
+
+    ensureChart('ratingDistChart', ()=>({
+      type:'bar',
+      data:{ labels:[], datasets:[{ label:'Películas', data:[], backgroundColor:'rgba(221,214,254,.9)', borderColor:'rgba(221,214,254,1)', borderWidth:1 }]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+    }));
+
+    updateChart('ratingDistChart', (c)=>{
+      c.data.labels = labels;
+      c.data.datasets[0].data = counts;
+    });
+  }
+
+  /* ---------- Países ---------- */
+  async function loadCountryData(){
+    const y1 = +(document.getElementById('year-from').value||2010);
+    const y2 = +(document.getElementById('year-to').value||2020);
+    const top = +(document.getElementById('country-top').value||15);
+    const { data } = await axios.get(`${API_BASE}/api/production/countries?top_n=${top}&year_from=${y1}&year_to=${y2}`);
+
+    const labels = data.map(c=>c.country);
+    const counts = data.map(c=>c.movie_count);
+
+    ensureChart('countryChart', ()=>({
+      type:'bar',
+      data:{ labels:[], datasets:[{ label:'Películas', data:[], backgroundColor:'rgba(147,197,253,.9)', borderColor:'rgba(147,197,253,1)', borderWidth:1 }]},
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true }, y:{ display:false } } }
+    }));
+
+    updateChart('countryChart', (c)=>{
+      c.data.labels = labels;
+      c.data.datasets[0].data = counts;
+    });
+  }
+
+  /* ---------- Tendencias ---------- */
+  async function loadRatingTrends(){
+    const s = +(document.getElementById('trend-start').value||2000);
+    const e = +(document.getElementById('trend-end').value||2023);
+    const { data } = await axios.get(`${API_BASE}/api/ratings/trends?start_year=${s}&end_year=${e}`);
+    const arr = data.slice().reverse();
+    const years = arr.map(d=>d.year);
+    const avg   = arr.map(d=>d.avg_rating);
+    const cnt   = arr.map(d=>d.movie_count);
+
+    ensureChart('trendsChart', ()=>({
+      type:'line',
+      data:{ labels:[], datasets:[
+        { label:'Promedio', data:[], borderColor:'rgba(231,76,60,1)', backgroundColor:'rgba(231,76,60,.10)', borderWidth:2, pointRadius:0, tension:.25, yAxisID:'y' },
+        { label:'Películas', data:[], borderColor:'rgba(147,197,253,1)', backgroundColor:'rgba(147,197,253,.10)', borderWidth:2, pointRadius:0, tension:.25, yAxisID:'y1' }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, scales:{
+        y:{ title:{display:true, text:'Promedio'} },
+        y1:{ position:'right', grid:{ drawOnChartArea:false }, title:{display:true, text:'Películas'} }
+      } }
+    }));
+
+    updateChart('trendsChart', (c)=>{
+      c.data.labels = years;
+      c.data.datasets[0].data = avg;
+      c.data.datasets[1].data = cnt;
+    });
+  }
+
+  /* ---------- Idiomas ---------- */
+  async function loadLanguageDistribution(){
+    const { data } = await axios.get(`${API_BASE}/api/production/languages?limit=10`);
+    const labels = data.map(l=>l.language);
+    const counts = data.map(l=>l.movie_count);
+
+    ensureChart('languageChart', ()=>({
+      type:'doughnut',
+      data:{ labels:[], datasets:[{ data:[], backgroundColor:[
+        'rgba(199,210,254,.9)','rgba(147,197,253,.9)','rgba(187,247,208,.9)','rgba(254,215,170,.9)','rgba(253,186,116,.9)',
+        'rgba(244,114,182,.3)','rgba(59,130,246,.3)','rgba(168,85,247,.3)','rgba(239,68,68,.3)','rgba(34,197,94,.3)'
+      ], borderColor:'#fff', borderWidth:2 }]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'right'} } }
+    }));
+
+    updateChart('languageChart', (c)=>{
+      c.data.labels = labels;
+      c.data.datasets[0].data = counts;
+    });
+  }
+
+  /* ---------- Directores ---------- */
+  async function loadDirectors(){
+    const sortBy = document.getElementById('director-sort').value;
+    const { data } = await axios.get(`${API_BASE}/api/production/directors?limit=10&min_movies=5&sort_by=${sortBy}`);
+    const labels = data.map(d=>d.director);
+    const values = data.map(d=>{
+      if (sortBy==='avg_rating') return d.avg_rating||0;
+      if (sortBy==='total_votes') return (d.total_votes||0)/1000;
+      return d.movie_count;
+    });
+
+    ensureChart('directorsChart', ()=>({
+      type:'radar',
+      data:{ labels:[], datasets:[{ label:'Valor', data:[], backgroundColor:'rgba(199,210,254,.35)', borderColor:'rgba(199,210,254,1)', borderWidth:2, pointBackgroundColor:'rgba(199,210,254,1)'}]},
+      options:{ responsive:true, maintainAspectRatio:false, scales:{ r:{ beginAtZero:true } } }
+    }));
+
+    updateChart('directorsChart', (c)=>{
+      c.data.labels = labels;
+      c.data.datasets[0].data = values;
+      c.data.datasets[0].label =
+        sortBy==='avg_rating' ? 'Promedio' : sortBy==='total_votes' ? 'Votos (K)' : 'Películas';
+    });
+  }
+
+  /* ---------- Duración vs calificación ---------- */
+  async function loadDurationAnalysis(){
+    const { data } = await axios.get(`${API_BASE}/api/ratings/duration-analysis`);
+    const labels = data.map(d=>d.duration_category);
+    const avg = data.map(d=>d.avg_rating);
+    const cnt = data.map(d=>d.movie_count);
+
+    ensureChart('durationChart', ()=>({
+      type:'bar',
+      data:{ labels:[], datasets:[
+        { label:'Promedio', data:[], backgroundColor:'rgba(253,186,116,.9)', borderColor:'rgba(253,186,116,1)', yAxisID:'y' },
+        { label:'Películas', data:[], backgroundColor:'rgba(147,197,253,.9)', borderColor:'rgba(147,197,253,1)', yAxisID:'y1' }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, scales:{
+        y:{ title:{display:true, text:'Promedio'} },
+        y1:{ position:'right', grid:{ drawOnChartArea:false }, title:{display:true, text:'Películas'} }
+      } }
+    }));
+
+    updateChart('durationChart', (c)=>{
+      c.data.labels = labels;
+      c.data.datasets[0].data = avg;
+      c.data.datasets[1].data = cnt;
+    });
+  }
+
+  /* ---------- Top películas (tabla) ---------- */
+  async function loadTopMovies(){
+    const minVotes = +(document.getElementById('min-votes').value||5000);
+    const { data } = await axios.get(`${API_BASE}/api/ratings/top-rated?limit=15&min_votes=${minVotes}`);
+    const tb = document.querySelector('#topMoviesTable tbody');
+    tb.innerHTML = data.map(m=>`
+      <tr>
+        <td><strong>${m.title}</strong></td>
+        <td>${m.year ?? 'N/D'}</td>
+        <td>${m.avg_vote}</td>
+        <td>${(+m.votes).toLocaleString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  /* ---------- Eventos & carga inicial ---------- */
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    // Nav decorativo
+    document.querySelectorAll('#nav a').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        e.preventDefault();
+        document.querySelectorAll('#nav a').forEach(x=>x.classList.remove('active'));
+        a.classList.add('active');
+      });
+    });
+
+    await loadStatistics();
+    await loadProductionCompanies();
+    await loadRatingDistribution();
+    await loadCountryData();
+    await loadRatingTrends();
+    await loadLanguageDistribution();
+    await loadDirectors();
+    await loadDurationAnalysis();
+    await loadTopMovies();
+
+    // Filtros y toggles en vivo
+    document.getElementById('company-search').addEventListener('input', applyCompanyFilter);
+    document.getElementById('company-limit').addEventListener('input', loadProductionCompanies);
+    document.getElementById('toggle-normalize').addEventListener('change', (e)=>{ normalizeLine = e.target.checked; updateCompaniesChart(); });
+    document.getElementById('toggle-invert').addEventListener('change', (e)=>{ invertRight   = e.target.checked; updateCompaniesChart(); });
+
+    document.getElementById('year-from').addEventListener('input', loadCountryData);
+    document.getElementById('year-to').addEventListener('input', loadCountryData);
+    document.getElementById('country-top').addEventListener('change', loadCountryData);
+
+    document.getElementById('trend-start').addEventListener('input', loadRatingTrends);
+    document.getElementById('trend-end').addEventListener('input', loadRatingTrends);
+
+    document.getElementById('director-sort').addEventListener('change', loadDirectors);
+
+    document.getElementById('min-votes').addEventListener('input', loadTopMovies);
+  });
+</script>
+</body>
+</html>
