@@ -43,26 +43,15 @@ const Dashboard = () => {
           themesData,
           companiesData,
           countriesData,
-          directorsData,
-          ratingData,
-          topRatedData,
-          trendsData,
-          mongoStatsData,
-          mongoAggData,
-          mongoMoviesData
+          directorsData
+
         ] = await Promise.all([
           statsRes.json(),
           distRes.json(),
           themesRes.json(),
           companiesRes.json(),
           countriesRes.json(),
-          directorsRes.json(),
-          ratingRes.json(),
-          topRatedRes.json(),
-          trendsRes.json(),
-          mongoStatsRes.json(),
-          mongoAggRes.json(),
-          mongoMoviesRes.json()
+          directorsRes.json()
         ]);
 
         // Movies API
@@ -76,14 +65,8 @@ const Dashboard = () => {
         setCompaniesData(companiesData.data);
         setCountriesData(countriesData.data);
         setDirectorsData(directorsData.data);
-        setRatingDistribution(ratingData.data);
-        setTopRated(topRatedData.data);
-        setRatingTrends(trendsData.data);
 
-        // MongoDB API
-        setMongoStats(mongoStatsData);
-        setMongoAggregations(mongoAggData);
-        setMongoMovies(mongoMoviesData.data);
+
 
         setLoading(false);
       } catch (error) {

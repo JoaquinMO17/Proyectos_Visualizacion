@@ -3,8 +3,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from dotenv import load_dotenv
 
-
-load_dotenv
+# 🔧 CORRECCIÓN: load_dotenv() necesita los paréntesis
+load_dotenv()  # <- Agregar los paréntesis aquí
 
 # Leer la URL de conexión desde .env
 DATABASE_URL = os.getenv("DATABASE_URL")

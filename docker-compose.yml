@@ -46,6 +46,7 @@ services:
       - ./data:/docker-entrypoint-initdb.d/data:ro
       - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
 
+
 volumes:
   postgres_data:
   mongo_data:

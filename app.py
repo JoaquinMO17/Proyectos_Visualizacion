@@ -4,11 +4,15 @@ from models import Base, Movie_Info, Production_Info, Rating_Info, EtlMetadata
 from database import engine, get_db
 from mongodb_database import connect_to_mongo, close_mongo_connection, get_mongo_database
 from scripts.etl import run_etl
-from scripts.services.movie_service import MovieService
+from scripts.services.movie_service import MoviesService
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 from scripts.services.production_service import ProductionService
 from scripts.services.rating_service import RatingService
+from collections import Counter
+import re
+from sqlalchemy import func, extract
+from fastapi.middleware.cors import CORSMiddleware
 
 
 import json
@@ -26,6 +30,16 @@ app = FastAPI(
     title="Movie Database API - PostgreSQL + MongoDB", 
     version="3.0.0",
     lifespan=lifespan
+ 
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, especifica los dominios exactos: ["http://localhost:3000", "https://yourdomain.com"]
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 @app.get('/')
@@ -91,6 +105,8 @@ def execute_etl_async(background_tasks: BackgroundTasks):
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
 
+#Endpoint movies 
+
 @app.get('/movies')
 def get_movies(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     movies = db.query(Movie_Info).offset(skip).limit(limit).all()
@@ -102,7 +118,7 @@ def get_top_rated_movies(
     db: Session = Depends(get_db)
 ):
     """Get top rated movies from PostgreSQL"""
-    service = MovieService(db)
+    service = MoviesService(db)
     return service.get_top_movies_by_rating(limit)
 
 @app.get("/api/movies/by-year/{start_year}/{end_year}")
@@ -112,14 +128,9 @@ def get_movies_by_year_range(
     db: Session = Depends(get_db)
 ):
     """Get movies by year range from PostgreSQL"""
-    service = MovieService(db)
+    service = MoviesService(db)
     return service.get_movies_by_year_range(start_year, end_year)
 
-@app.get("/api/movies/statistics")
-def get_movie_statistics(db: Session = Depends(get_db)):
-    """Get statistics from PostgreSQL"""
-    service = MovieService(db)
-    return service.get_movie_statistics()
 
 @app.get("/api/movies/search")
 def search_movies(
@@ -130,7 +141,7 @@ def search_movies(
     db: Session = Depends(get_db)
 ):
     """Advanced search in PostgreSQL"""
-    service = MovieService(db)
+    service = MoviesService(db)
     return service.search_movies_advanced(
         title=title,
         min_year=min_year,
@@ -138,6 +149,193 @@ def search_movies(
         min_rating=min_rating
     )
 
+@app.get("/api/movies/themes-by-decade")
+def get_themes_by_decade(db: Session = Depends(get_db)):
+    """
+    Análisis de temas por década basado en descripciones de películas.
+    Retorna las palabras más frecuentes en descripciones por década.
+    """
+    try:
+        # Obtener todas las películas con descripción y año válidos
+        movies = db.query(Movie_Info).filter(
+            Movie_Info.description.isnot(None),
+            Movie_Info.description != '',
+            Movie_Info.year.isnot(None),
+            Movie_Info.year >= 1900,
+            Movie_Info.year <= 2030
+        ).all()
+        
+        # Agrupar por década
+        decades_data = {}
+        
+        # Palabras a excluir (stop words y palabras comunes no significativas)
+        stop_words = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+            'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
+            'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'his', 'her',
+            'their', 'its', 'this', 'that', 'these', 'those', 'he', 'she', 'it', 'they', 'we', 'you',
+            'i', 'me', 'my', 'your', 'our', 'him', 'them', 'who', 'what', 'when', 'where', 'why',
+            'how', 'all', 'some', 'any', 'each', 'every', 'no', 'not', 'only', 'own', 'same', 'so',
+            'than', 'too', 'very', 'just', 'now', 'more', 'most', 'other', 'such', 'get', 'go',
+            'make', 'take', 'come', 'see', 'know', 'think', 'look', 'want', 'give', 'use', 'find',
+            'tell', 'ask', 'work', 'seem', 'feel', 'try', 'leave', 'call', 'movie', 'film', 'story'
+        }
+        
+        for movie in movies:
+            decade = (movie.year // 10) * 10  # 1990, 2000, 2010, etc.
+            decade_key = f"{decade}s"
+            
+            if decade_key not in decades_data:
+                decades_data[decade_key] = []
+            
+            # Procesar descripción: limpiar y extraer palabras significativas
+            if movie.description:
+                # Convertir a minúsculas y extraer solo palabras
+                words = re.findall(r'\b[a-zA-Z]{3,}\b', movie.description.lower())
+                # Filtrar stop words
+                meaningful_words = [word for word in words if word not in stop_words]
+                decades_data[decade_key].extend(meaningful_words)
+        
+        # Calcular las palabras más frecuentes por década
+        result = {}
+        for decade, words in decades_data.items():
+            if words:  # Solo si hay palabras
+                word_counts = Counter(words)
+                # Obtener las 20 palabras más frecuentes
+                top_words = word_counts.most_common(20)
+                result[decade] = [
+                    {"word": word, "count": count} 
+                    for word, count in top_words
+                ]
+        
+        return {
+            "status": "success",
+            "data": result,
+            "metadata": {
+                "total_decades": len(result),
+                "total_movies_analyzed": len(movies),
+                "description": "Top 20 most frequent meaningful words in movie descriptions by decade"
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "data": {}
+        }
+
+@app.get("/api/movies/distribution-by-year")
+def get_movies_distribution_by_year(
+    start_year: Optional[int] = Query(None, ge=1900, le=2030, description="Start year (default: earliest available)"),
+    end_year: Optional[int] = Query(None, ge=1900, le=2030, description="End year (default: latest available)"),
+    group_by: str = Query("year", regex="^(year|decade)$", description="Group by year or decade"),
+    db: Session = Depends(get_db)
+):
+    """
+    Distribución de películas por año o década.
+    Perfecto para gráficos de línea o barras mostrando tendencias de producción.
+    """
+    try:
+        # Query base
+        query = db.query(Movie_Info).filter(
+            Movie_Info.year.isnot(None),
+            Movie_Info.year >= 1900,
+            Movie_Info.year <= 2030
+        )
+        
+        # Aplicar filtros de año si se proporcionan
+        if start_year:
+            query = query.filter(Movie_Info.year >= start_year)
+        if end_year:
+            query = query.filter(Movie_Info.year <= end_year)
+        
+        if group_by == "decade":
+            # Agrupar por década
+            results = db.query(
+                func.floor(Movie_Info.year / 10) * 10,
+                func.count(Movie_Info.imdb_title_id)
+            ).filter(
+                Movie_Info.year.isnot(None),
+                Movie_Info.year >= (start_year or 1900),
+                Movie_Info.year <= (end_year or 2030)
+            ).group_by(
+                func.floor(Movie_Info.year / 10) * 10
+            ).order_by(
+                func.floor(Movie_Info.year / 10) * 10
+            ).all()
+            
+            data = [
+                {
+                    "period": f"{int(decade)}s",
+                    "year": int(decade),
+                    "count": count,
+                    "period_type": "decade"
+                }
+                for decade, count in results
+            ]
+            
+        else:
+            # Agrupar por año
+            results = db.query(
+                Movie_Info.year,
+                func.count(Movie_Info.imdb_title_id)
+            ).filter(
+                Movie_Info.year.isnot(None),
+                Movie_Info.year >= (start_year or 1900),
+                Movie_Info.year <= (end_year or 2030)
+            ).group_by(
+                Movie_Info.year
+            ).order_by(
+                Movie_Info.year
+            ).all()
+            
+            data = [
+                {
+                    "period": str(year),
+                    "year": year,
+                    "count": count,
+                    "period_type": "year"
+                }
+                for year, count in results
+            ]
+        
+        # Calcular estadísticas adicionales
+        total_movies = sum(item["count"] for item in data)
+        avg_per_period = total_movies / len(data) if data else 0
+        max_production = max(data, key=lambda x: x["count"]) if data else None
+        min_production = min(data, key=lambda x: x["count"]) if data else None
+        
+        return {
+            "status": "success",
+            "data": data,
+            "metadata": {
+                "group_by": group_by,
+                "total_movies": total_movies,
+                "total_periods": len(data),
+                "average_per_period": round(avg_per_period, 2),
+                "peak_production": {
+                    "period": max_production["period"],
+                    "count": max_production["count"]
+                } if max_production else None,
+                "lowest_production": {
+                    "period": min_production["period"],
+                    "count": min_production["count"]
+                } if min_production else None,
+                "year_range": {
+                    "start": start_year or (data[0]["year"] if data else None),
+                    "end": end_year or (data[-1]["year"] if data else None)
+                }
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "data": [],
+            "metadata": {}
+        }
 # ============= MongoDB Endpoints (New) =============
 
 @app.get('/test-mongodb')

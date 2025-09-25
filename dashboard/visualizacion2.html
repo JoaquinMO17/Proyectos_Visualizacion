@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribución de Películas por Año</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 20px;
+            padding: 0;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h2>Distribución de Películas por Año</h2>
+
+    <div class="chart-container">
+        <canvas id="moviesByYearChart" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        async function loadDistributionData() {
+    const startYear = document.getElementById('startYear').value;
+    const endYear = document.getElementById('endYear').value;
+    const groupBy = document.getElementById('groupBy').value;
+
+    try {
+        let url = `${API_BASE_URL}/api/movies/distribution-by-year?group_by=${groupBy}`;
+        if (startYear) url += `&start_year=${startYear}`;
+        if (endYear) url += `&end_year=${endYear}`;
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        console.log("Distribución result:", result); // 👈 agrega este log para debug
+
+        if (result.status === 'success' && result.data.length > 0) {
+            displayDistributionStats(result.metadata);
+            createDistributionChart(result.data, groupBy);
+        } else {
+            document.getElementById('distributionStats').innerHTML = 
+                `<div class="error">No hay datos para mostrar en este rango.</div>`;
+        }
+    } catch (error) {
+        console.error('Error loading distribution data:', error);
+    }
+
+        async function loadMoviesByYear() {
+            try {
+                const response = await fetch("http://localhost:8000/movies/distribution-by-year");
+                const result = await response.json();
+
+                if (!result.data || result.data.length === 0) {
+                    alert("No se encontraron datos para graficar.");
+                    return;
+                }
+
+                // Extraemos años y número de películas
+                const years = result.data.map(item => item.year);
+                const totals = result.data.map(item => item.total_movies);
+
+                // Creamos la gráfica
+                const ctx = document.getElementById("moviesByYearChart").getContext("2d");
+                new Chart(ctx, {
+                    type: "bar", // puedes cambiarlo a "line"
+                    data: {
+                        labels: years,
+                        datasets: [{
+                            label: "Películas por año",
+                            data: totals,
+                            borderColor: "rgba(54, 162, 235, 1)",
+                            backgroundColor: "rgba(54, 162, 235, 0.6)"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: "Distribución de películas por año"
+                            },
+                            legend: {
+                                display: true,
+                                position: "top"
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Año"
+                                },
+                                ticks: {
+                                    maxRotation: 90,
+                                    minRotation: 45
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "Número de películas"
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+                alert("No se pudieron cargar los datos.");
+            }
+        }
+
+        // Ejecutamos al cargar la página
+        loadMoviesByYear();
+    </script>
+</body>
+</html>

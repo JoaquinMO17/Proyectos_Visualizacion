@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Data Visualizations - Movies Table</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #555;
+            min-width: 100px;
+        }
+
+        select, input, button {
+            padding: 0.8rem 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .visualization-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .visualization-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 8px;
+            padding: 1rem;
+            color: #c00;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin: 1rem 0;
+        }
+
+        .wordcloud-container {
+            position: relative;
+            height: 400px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .decade-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .decade-tab {
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .decade-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .decade-tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group label {
+                min-width: auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎬 Movie Data Analysis</h1>
+        <p>Análisis de Tendencias Cinematográficas - Tabla Movies</p>
+    </div>
+
+    <div class="container">
+        <!-- Controles para la visualización de distribución por año -->
+        <div class="controls">
+            <h3 style="margin-bottom: 1rem; color: #333;">⚙️ Configuración de Visualizaciones</h3>
+            <div class="control-group">
+                <label for="startYear">Año Inicio:</label>
+                <input type="number" id="startYear" min="1900" max="2030" placeholder="1900">
+                
+                <label for="endYear">Año Fin:</label>
+                <input type="number" id="endYear" min="1900" max="2030" placeholder="2030">
+                
+                <label for="groupBy">Agrupar por:</label>
+                <select id="groupBy">
+                    <option value="year">Año</option>
+                    <option value="decade">Década</option>
+                </select>
+                
+                <button onclick="loadDistributionData()">📊 Actualizar</button>
+            </div>
+        </div>
+
+        <div class="visualization-grid">
+            <!-- Visualización 1: Temas por Década -->
+            <div class="visualization-card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">💭 Evolución de Temas Cinematográficos</h2>
+                        <p class="card-subtitle">Análisis de palabras más frecuentes en descripciones por década</p>
+                    </div>
+                </div>
+                
+                <div id="themesStats" class="stats-grid"></div>
+                
+                <div class="decade-tabs" id="decadeTabs"></div>
+                
+                <div id="wordcloudContainer" class="wordcloud-container">
+                    <div class="loading">Cargando análisis de temas...</div>
+                </div>
+            </div>
+
+            <!-- Visualización 2: Distribución por Año -->
+            <div class="visualization-card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">📈 Producción Cinematográfica en el Tiempo</h2>
+                        <p class="card-subtitle">Tendencias de producción de películas por año/década</p>
+                    </div>
+                </div>
+                
+                <div id="distributionStats" class="stats-grid"></div>
+                
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let themesData = {};
+        let currentDecade = '';
+        let distributionChart = null;
+        
+        // URL base de la API - CAMBIAR SEGÚN TU CONFIGURACIÓN
+        const API_BASE_URL = 'http://localhost:8000'; // Cambiar por tu URL
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            loadThemesData();
+            loadDistributionData();
+        });
+
+        // Función para cargar datos de temas por década
+        async function loadThemesData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/movies/themes-by-decade`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    themesData = result.data;
+                    displayThemesStats(result.metadata);
+                    createDecadeTabs();
+                    
+                    // Mostrar la primera década disponible
+                    const firstDecade = Object.keys(themesData).sort()[0];
+                    if (firstDecade) {
+                        showWordCloud(firstDecade);
+                    }
+                } else {
+                    document.getElementById('wordcloudContainer').innerHTML = 
+                        `<div class="error">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading themes data:', error);
+                document.getElementById('wordcloudContainer').innerHTML = 
+                    `<div class="error">Error de conexión: ${error.message}</div>`;
+            }
+        }
+
+        // Función para mostrar estadísticas de temas
+        function displayThemesStats(metadata) {
+            const statsHtml = `
+                <div class="stat-item">
+                    <div class="stat-value">${metadata.total_decades}</div>
+                    <div class="stat-label">Décadas Analizadas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${metadata.total_movies_analyzed.toLocaleString()}</div>
+                    <div class="stat-label">Películas Analizadas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">20</div>
+                    <div class="stat-label">Palabras por Década</div>
+                </div>
+            `;
+            document.getElementById('themesStats').innerHTML = statsHtml;
+        }
+
+        // Función para crear las pestañas de décadas
+        function createDecadeTabs() {
+            const decades = Object.keys(themesData).sort();
+            const tabsHtml = decades.map(decade => 
+                `<div class="decade-tab" onclick="showWordCloud('${decade}')">${decade}</div>`
+            ).join('');
+            document.getElementById('decadeTabs').innerHTML = tabsHtml;
+        }
+
+        // Función para mostrar nube de palabras
+        function showWordCloud(decade) {
+            currentDecade = decade;
+            
+            // Actualizar pestañas activas
+            document.querySelectorAll('.decade-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent === decade) {
+                    tab.classList.add('active');
+                }
+            });
+
+            const container = document.getElementById('wordcloudContainer');
+            container.innerHTML = ''; // Limpiar contenido anterior
+
+            if (!themesData[decade] || themesData[decade].length === 0) {
+                container.innerHTML = '<div class="loading">No hay datos para esta década</div>';
+                return;
+            }
+
+            // Preparar datos para wordcloud2.js
+            const wordList = themesData[decade].map(item => [item.word, item.count * 3]); // Multiplicar por 3 para mejor visualización
+
+            // Crear la nube de palabras
+            WordCloud(container, {
+                list: wordList,
+                gridSize: Math.round(16 * container.offsetWidth / 1024),
+                weightFactor: function(size) {
+                    return Math.pow(size, 0.8) * container.offsetWidth / 1024;
+                },
+                fontFamily: 'Arial, sans-serif',
+                color: function(word, weight) {
+                    // Colores dinámicos basados en el peso
+                    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+                    return colors[Math.floor(Math.random() * colors.length)];
+                },
+                rotateRatio: 0.3,
+                rotationSteps: 2,
+                backgroundColor: 'transparent',
+                minSize: 8
+            });
+        }
+
+        // Función para cargar datos de distribución
+        async function loadDistributionData() {
+            const startYear = document.getElementById('startYear').value;
+            const endYear = document.getElementById('endYear').value;
+            const groupBy = document.getElementById('groupBy').value;
+            
+            try {
+                let url = `${API_BASE_URL}/api/movies/distribution-by-year?group_by=${groupBy}`;
+                if (startYear) url += `&start_year=${startYear}`;
+                if (endYear) url += `&end_year=${endYear}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    displayDistributionStats(result.metadata);
+                    createDistributionChart(result.data, groupBy);
+                } else {
+                    console.error('Error loading distribution data:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading distribution data:', error);
+            }
+        }
+
+        // Función para mostrar estadísticas de distribución
+        function displayDistributionStats(metadata) {
+            const statsHtml = `
+                <div class="stat-item">
+                    <div class="stat-value">${metadata.total_movies.toLocaleString()}</div>
+                    <div class="stat-label">Total Películas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${metadata.total_periods}</div>
+                    <div class="stat-label">Períodos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${metadata.average_per_period}</div>
+                    <div class="stat-label">Promedio por Período</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${metadata.peak_production ? metadata.peak_production.period : 'N/A'}</div>
+                    <div class="stat-label">Pico de Producción</div>
+                </div>
+            `;
+            document.getElementById('distributionStats').innerHTML = statsHtml;
+        }
+
+        // Función para crear el gráfico de distribución
+        function createDistributionChart(data, groupBy) {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            const labels = data.map(item => item.period);
+            const counts = data.map(item => item.count);
+
+            distributionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: groupBy === 'year' ? 'Películas por Año' : 'Películas por Década',
+                        data: counts,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#764ba2',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: groupBy === 'year' ? 'Año' : 'Década',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Número de Películas',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Función para redimensionar la nube de palabras cuando cambia el tamaño de la ventana
+        window.addEventListener('resize', function() {
+            if (currentDecade) {
+                setTimeout(() => showWordCloud(currentDecade), 300);
+            }
+        });
+    </script>
+</body>
+</html>
