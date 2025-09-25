@@ -1,9 +1,11 @@
 from fastapi import FastAPI, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
 from models import Base, Movie_Info, Production_Info, Rating_Info, EtlMetadata
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 from scripts.etl import run_etl
 from scripts.services.movie_service import MovieService
+from scripts.services.production_service import VisualizationService
+from scripts.services.rating_service import RatingService
 from typing import Optional
 
 app = FastAPI(title="Movie Database API", version="2.0.0")
@@ -61,60 +63,85 @@ def execute_etl_async(background_tasks: BackgroundTasks):
         return {'status': 'success', 'message': 'ETL process started in background'}
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
+    
+# ----------------------------
+# MOVIES ENDPOINTS
+# ----------------------------
 
-@app.get('/movies')
-def get_movies(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    movies = db.query(Movie_Info).offset(skip).limit(limit).all()
-    return movies
+@app.get("/api/movies/by-year/{year}")
+def get_movies_by_year(year: int, db: Session = Depends(get_db)):
+    """Get all movies released in a specific year."""
+    service = MovieService(db)
+    return service.get_movies_by_year(year=year)
 
-# NUEVOS ENDPOINTS USANDO EL SERVICIO
+@app.get("/api/movies/longest")
+def get_longest_movies(limit: int = Query(default=10, ge=1, le=100), db: Session = Depends(get_db)):
+    """Get the longest movies by duration."""
+    service = MovieService(db)
+    return service.get_longest_movies(limit=limit)
 
-@app.get("/api/movies/top-rated")
+@app.get("/api/movies/with-keyword/{keyword}")
+def get_movies_with_keyword(keyword: str, db: Session = Depends(get_db)):
+    """Get all movies that contain a specific keyword in the description."""
+    service = MovieService(db)
+    return service.get_movies_with_keyword(keyword=keyword)
+
+
+# ----------------------------
+# PRODUCTION ENDPOINTS
+# ----------------------------
+
+@app.get("/api/top-production-companies")
+def top_production_companies(limit: int = 10):
+    """Get the top production companies by number of movies."""
+    db: Session = SessionLocal()
+    service = VisualizationService(db)
+    try:
+        return service.get_top_production_companies(limit=limit)
+    finally:
+        db.close()
+
+@app.get("/api/collaborations")
+def collaborations(max_edges: int = 100):
+    """Get the collaborations network between production companies and movies."""
+    db: Session = SessionLocal()
+    service = VisualizationService(db)
+    try:
+        return service.get_collaborations_network(max_edges=max_edges)
+    finally:
+        db.close()
+
+
+# ----------------------------
+# RATINGS ENDPOINTS
+# ----------------------------
+
+@app.get("/api/ratings")
+def get_ratings(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    """Get all ratings with pagination."""
+    service = RatingService(db)
+    return service.get_all_ratings(skip, limit)
+
+@app.get("/api/ratings/top-voted")
+def get_top_voted_movies(
+    limit: int = Query(default=10, ge=1, le=100, description="Number of movies to return"),
+    db: Session = Depends(get_db)
+):
+    """Get the most voted movies (popularity)."""
+    service = RatingService(db)
+    return service.get_top_voted_movies(limit=limit)
+
+@app.get("/api/ratings/top-rated")
 def get_top_rated_movies(
-    limit: int = Query(default=10, ge=1, le=100),
+    limit: int = Query(default=10, ge=1, le=100, description="Number of movies to return"),
     db: Session = Depends(get_db)
 ):
-    """Obtiene las películas mejor calificadas con toda su información"""
-    service = MovieService(db)
-    return service.get_top_movies_by_rating(limit)
+    """Get the top-rated movies (acclaim, only with more than 1000 votes)."""
+    service = RatingService(db)
+    return service.get_top_rated_movies(limit=limit)
 
-@app.get("/api/movies/by-year/{start_year}/{end_year}")
-def get_movies_by_year_range(
-    start_year: int,
-    end_year: int,
-    db: Session = Depends(get_db)
-):
-    """Obtiene películas dentro de un rango de años"""
-    service = MovieService(db)
-    return service.get_movies_by_year_range(start_year, end_year)
-
-@app.get("/api/movies/statistics")
-def get_movie_statistics(db: Session = Depends(get_db)):
-    """Obtiene estadísticas completas de la base de datos"""
-    service = MovieService(db)
-    return service.get_movie_statistics()
-
-@app.get("/api/movies/search")
-def search_movies(
-    title: Optional[str] = Query(None, description="Título de la película"),
-    min_year: Optional[int] = Query(None, description="Año mínimo"),
-    max_year: Optional[int] = Query(None, description="Año máximo"),
-    min_rating: Optional[float] = Query(None, ge=0, le=10, description="Rating mínimo"),
-    db: Session = Depends(get_db)
-):
-    """Búsqueda avanzada de películas con múltiples filtros"""
-    service = MovieService(db)
-    return service.search_movies_advanced(
-        title=title,
-        min_year=min_year,
-        max_year=max_year,
-        min_rating=min_rating
-    )
-
-
-
-
-
-
-
-
+@app.get("/api/ratings/trends")
+def get_rating_trends_by_year(db: Session = Depends(get_db)):
+    """Get rating trends over time (average rating and votes per year)."""
+    service = RatingService(db)
+    return service.get_rating_trends_by_year()
