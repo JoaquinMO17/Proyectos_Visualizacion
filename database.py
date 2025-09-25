@@ -3,6 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from dotenv import load_dotenv
 
+
 load_dotenv
 
 # Leer la URL de conexión desde .env

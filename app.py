@@ -7,6 +7,10 @@ from scripts.etl import run_etl
 from scripts.services.movie_service import MovieService
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
+from scripts.services.production_service import ProductionService
+from scripts.services.rating_service import RatingService
+
+
 import json
 
 @asynccontextmanager
@@ -411,6 +415,206 @@ async def sync_postgres_to_mongo(db: Session = Depends(get_db)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+# =====================================
+# PRODUCTION TABLE DASHBOARD ENDPOINTS
+# =====================================
+
+@app.get("/api/production/companies")
+def get_production_companies(
+    limit: int = Query(default=10, ge=1, le=100),
+    min_movies: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db)
+):
+    """
+    Get top production companies with statistics.
+    Perfect for: Bar charts, company rankings
+    """
+    service = ProductionService(db)
+    return service.get_top_production_companies(limit=limit, min_movies=min_movies)
+
+@app.get("/api/production/countries")
+def get_movies_by_country(
+    top_n: int = Query(default=20, ge=1, le=100),
+    year_from: Optional[int] = Query(None, ge=1900, le=2030),
+    year_to: Optional[int] = Query(None, ge=1900, le=2030),
+    db: Session = Depends(get_db)
+):
+    """
+    Get movie distribution by country with filtering.
+    Perfect for: World maps, country comparisons
+    """
+    service = ProductionService(db)
+    return service.get_movies_by_country(
+        top_n=top_n,
+        year_from=year_from,
+        year_to=year_to
+    )
+
+@app.get("/api/production/directors")
+def get_top_directors(
+    limit: int = Query(default=15, ge=1, le=100),
+    min_movies: int = Query(default=2, ge=1),
+    sort_by: str = Query(default="movie_count", regex="^(movie_count|avg_rating|total_votes)$"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get top directors with their statistics.
+    Sort options: movie_count, avg_rating, total_votes
+    Perfect for: Director rankings, talent analysis
+    """
+    service = ProductionService(db)
+    return service.get_top_directors(
+        limit=limit,
+        min_movies=min_movies,
+        sort_by=sort_by
+    )
+
+@app.get("/api/production/languages")
+def get_language_distribution(
+    limit: int = Query(default=10, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """
+    Get movie distribution by language.
+    Perfect for: Language diversity charts, pie charts
+    """
+    service = ProductionService(db)
+    return service.get_language_distribution(limit=limit)
+
+@app.get("/api/production/actors")
+def get_top_actors(
+    limit: int = Query(default=20, ge=1, le=100),
+    min_movies: int = Query(default=3, ge=1),
+    db: Session = Depends(get_db)
+):
+    """
+    Get top actors by appearances and ratings.
+    Perfect for: Star power analysis, actor rankings
+    """
+    service = ProductionService(db)
+    return service.get_top_actors(
+        limit=limit,
+        min_movies=min_movies
+    )
+
+@app.get("/api/production/writers")
+def get_top_writers(
+    limit: int = Query(default=15, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Get top writers with their statistics.
+    Perfect for: Writer rankings, screenplay quality analysis
+    """
+    service = ProductionService(db)
+    return service.get_top_writers(limit=limit)
+
+
+# =====================================
+# RATING TABLE DASHBOARD ENDPOINTS
+# =====================================
+
+@app.get("/api/ratings/distribution")
+def get_rating_distribution(
+    bins: int = Query(default=10, ge=5, le=20),
+    db: Session = Depends(get_db)
+):
+    """
+    Get rating distribution across all movies.
+    Perfect for: Histogram charts, rating analysis
+    """
+    service = RatingService(db)
+    return service.get_rating_distribution(bins=bins)
+
+@app.get("/api/ratings/top-rated")
+def get_top_rated_movies_endpoint(
+    limit: int = Query(default=20, ge=1, le=100),
+    min_votes: int = Query(default=1000, ge=0),
+    db: Session = Depends(get_db)
+):
+    """
+    Get top rated movies with minimum vote threshold.
+    Perfect for: Top movie lists, quality rankings
+    """
+    service = RatingService(db)
+    return service.get_top_rated_movies(limit=limit, min_votes=min_votes)
+
+@app.get("/api/ratings/most-voted")
+def get_most_voted_movies_endpoint(
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Get most voted movies (popularity).
+    Perfect for: Popular movie lists, engagement metrics
+    """
+    service = RatingService(db)
+    return service.get_most_voted_movies(limit=limit)
+
+@app.get("/api/ratings/trends")
+def get_rating_trends(
+    start_year: Optional[int] = Query(None, ge=1900, le=2030),
+    end_year: Optional[int] = Query(None, ge=1900, le=2030),
+    db: Session = Depends(get_db)
+):
+    """
+    Get rating trends by year.
+    Perfect for: Time series charts, trend analysis
+    """
+    service = RatingService(db)
+    return service.get_rating_trends_by_year(start_year=start_year, end_year=end_year)
+
+@app.get("/api/ratings/controversial")
+def get_controversial_movies_endpoint(
+    limit: int = Query(default=20, ge=1, le=100),
+    min_votes: int = Query(default=500, ge=0),
+    db: Session = Depends(get_db)
+):
+    """
+    Get movies with biggest gap between user and critic reviews.
+    Perfect for: Controversy analysis, critic vs audience comparison
+    """
+    service = RatingService(db)
+    return service.get_controversial_movies(limit=limit, min_votes=min_votes)
+
+@app.get("/api/ratings/duration-analysis")
+def get_rating_duration_analysis(db: Session = Depends(get_db)):
+    """
+    Analyze ratings by movie duration categories.
+    Perfect for: Duration impact analysis, optimal length insights
+    """
+    service = RatingService(db)
+    return service.get_rating_vs_duration_analysis()
+
+@app.get("/api/ratings/underrated")
+def get_underrated_movies_endpoint(
+    limit: int = Query(default=20, ge=1, le=100),
+    max_votes: int = Query(default=10000, ge=100),
+    min_rating: float = Query(default=7.0, ge=0, le=10),
+    db: Session = Depends(get_db)
+):
+    """
+    Get hidden gems - high rated movies with few votes.
+    Perfect for: Discovery features, hidden gem recommendations
+    """
+    service = RatingService(db)
+    return service.get_underrated_movies(
+        limit=limit,
+        max_votes=max_votes,
+        min_rating=min_rating
+    )
+
+@app.get("/api/ratings/statistics")
+def get_rating_statistics_endpoint(db: Session = Depends(get_db)):
+    """
+    Get comprehensive rating statistics.
+    Perfect for: Dashboard KPIs, overall metrics
+    """
+    service = RatingService(db)
+    return service.get_rating_statistics()
 
 
 
