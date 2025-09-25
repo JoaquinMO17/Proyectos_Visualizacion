@@ -30,12 +30,7 @@ services:
   airflow-webserver:
     image: apache/airflow:2.7.1
     container_name: airflow-webserver
-    user: root
-    command: >
-      bash -c "
-        pip install pandas psycopg2-binary python-dotenv sqlalchemy &&
-        airflow webserver
-      "
+    command: airflow webserver
     ports:
       - "8080:8080"
     environment:
@@ -47,10 +42,6 @@ services:
       - ./data:/opt/airflow/data
       - ./scripts:/opt/airflow/scripts
       - ./logs:/opt/airflow/logs
-      - ./models.py:/opt/airflow/models.py
-      - ./database.py:/opt/airflow/database.py
-      - ./.env:/opt/airflow/.env
-      - ./requirements.txt:/opt/airflow/requirements.txt
     depends_on:
       - db
       - airflow-init
@@ -58,12 +49,7 @@ services:
   airflow-scheduler:
     image: apache/airflow:2.7.1
     container_name: airflow-scheduler
-    user: root
-    command: >
-      bash -c "
-        pip install pandas psycopg2-binary python-dotenv sqlalchemy &&
-        airflow scheduler
-      "
+    command: airflow scheduler
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/airflow
@@ -73,10 +59,6 @@ services:
       - ./data:/opt/airflow/data
       - ./scripts:/opt/airflow/scripts
       - ./logs:/opt/airflow/logs
-      - ./models.py:/opt/airflow/models.py
-      - ./database.py:/opt/airflow/database.py
-      - ./.env:/opt/airflow/.env
-      - ./requirements.txt:/opt/airflow/requirements.txt
     depends_on:
       - db
       - airflow-init
@@ -84,10 +66,8 @@ services:
   airflow-init:
     image: apache/airflow:2.7.1
     container_name: airflow-init
-    user: root
     command: >
       bash -c "
-        pip install pandas psycopg2-binary python-dotenv sqlalchemy &&
         airflow db init &&
         airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
       "
