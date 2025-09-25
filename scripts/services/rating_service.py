@@ -226,32 +226,41 @@ class RatingService:
     
     def get_rating_vs_duration_analysis(self) -> List[Dict[str, Any]]:
         query = text("""
+            WITH duration_categories AS (
+                SELECT 
+                    r.imdb_title_id,
+                    r.avg_vote,
+                    r.votes,
+                    m.duration,
+                    CASE 
+                        WHEN m.duration < 60 THEN 'Short (<60 min)'
+                        WHEN m.duration BETWEEN 60 AND 90 THEN 'Medium (60-90 min)'
+                        WHEN m.duration BETWEEN 91 AND 120 THEN 'Standard (91-120 min)'
+                        WHEN m.duration BETWEEN 121 AND 150 THEN 'Long (121-150 min)'
+                        WHEN m.duration > 150 THEN 'Very Long (>150 min)'
+                        ELSE 'Unknown'
+                    END as duration_category,
+                    CASE 
+                        WHEN m.duration < 60 THEN 1
+                        WHEN m.duration BETWEEN 60 AND 90 THEN 2
+                        WHEN m.duration BETWEEN 91 AND 120 THEN 3
+                        WHEN m.duration BETWEEN 121 AND 150 THEN 4
+                        WHEN m.duration > 150 THEN 5
+                        ELSE 6
+                    END as sort_order
+                FROM rating_info r
+                INNER JOIN movie_info m ON r.imdb_title_id = m.imdb_title_id
+                WHERE m.duration IS NOT NULL
+            )
             SELECT 
-                CASE 
-                    WHEN m.duration < 60 THEN 'Short (<60 min)'
-                    WHEN m.duration BETWEEN 60 AND 90 THEN 'Medium (60-90 min)'
-                    WHEN m.duration BETWEEN 91 AND 120 THEN 'Standard (91-120 min)'
-                    WHEN m.duration BETWEEN 121 AND 150 THEN 'Long (121-150 min)'
-                    WHEN m.duration > 150 THEN 'Very Long (>150 min)'
-                    ELSE 'Unknown'
-                END as duration_category,
+                duration_category,
                 COUNT(*) as movie_count,
-                AVG(r.avg_vote) as avg_rating,
-                AVG(r.votes) as avg_votes,
-                AVG(m.duration) as avg_duration
-            FROM rating_info r
-            INNER JOIN movie_info m ON r.imdb_title_id = m.imdb_title_id
-            WHERE m.duration IS NOT NULL
-            GROUP BY duration_category
-            ORDER BY 
-                CASE duration_category
-                    WHEN 'Short (<60 min)' THEN 1
-                    WHEN 'Medium (60-90 min)' THEN 2
-                    WHEN 'Standard (91-120 min)' THEN 3
-                    WHEN 'Long (121-150 min)' THEN 4
-                    WHEN 'Very Long (>150 min)' THEN 5
-                    ELSE 6
-                END
+                AVG(avg_vote) as avg_rating,
+                AVG(votes) as avg_votes,
+                AVG(duration) as avg_duration
+            FROM duration_categories
+            GROUP BY duration_category, sort_order
+            ORDER BY sort_order
         """)
         
         result = self.db.execute(query).mappings().all()

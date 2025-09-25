@@ -1,4 +1,5 @@
 from fastapi import FastAPI, BackgroundTasks, Depends, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from models import Base, Movie_Info, Production_Info, Rating_Info, EtlMetadata
 from database import engine, get_db
@@ -9,7 +10,6 @@ from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 from scripts.services.production_service import ProductionService
 from scripts.services.rating_service import RatingService
-
 
 import json
 
@@ -26,6 +26,15 @@ app = FastAPI(
     title="Movie Database API - PostgreSQL + MongoDB", 
     version="3.0.0",
     lifespan=lifespan
+)
+
+# Add CORS middleware configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins like ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get('/')
@@ -415,7 +424,6 @@ async def sync_postgres_to_mongo(db: Session = Depends(get_db)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
 
 # =====================================
