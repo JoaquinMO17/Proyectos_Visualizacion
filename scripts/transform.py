@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import os
 
 def transform_movies(df: pd.DataFrame) -> dict:
     """Transform raw dataframe into multiple cleaned tables."""
@@ -40,6 +41,7 @@ def transform_movies(df: pd.DataFrame) -> dict:
     ].copy()
 
     # Save the DataFrame to a CSV file
+    os.makedirs(os.path.dirname("data/processed/"), exist_ok=True)
     df.to_csv("data/processed/processed.csv", index=False)
 
     return {
@@ -51,8 +53,10 @@ def transform_movies(df: pd.DataFrame) -> dict:
 
 def csv_to_json(csv_path: str, json_path: str):
     df = pd.read_csv(csv_path, encoding="utf-8")
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
     df.to_json(json_path, orient="records", lines=True, force_ascii=False)
 
 def json_to_csv(json_path: str, csv_path: str):
     df = pd.read_json(json_path, lines=True)
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     df.to_csv(csv_path, index=False, encoding="utf-8")

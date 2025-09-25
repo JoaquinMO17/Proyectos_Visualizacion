@@ -27,50 +27,31 @@ def load_incremental(tables: dict, session: Session):
 
     df_full = tables["full"]
     # Leer último año cargado
-    last_loaded = session.query(EtlMetadata).filter_by(key="last_year").first()
-    last_year = int(last_loaded.value) if last_loaded else 0
+    last_loaded = session.query(EtlMetadata).filter_by(key="last_date").first()
+    last_date = pd.to_datetime(last_loaded.value) if last_loaded else pd.Timestamp.min
 
     # Filtrar solo nuevos
-    new_df = df_full[df_full["year"] > last_year]
+    new_df = df_full[df_full["date_published"] > last_date]
 
     if new_df.empty:
         print("⚠️ No new data to load.")
         return
 
-    for _, row in new_df.iterrows():
-        movie = Movie_Info(
-            imdb_title_id=row["imdb_title_id"],
-            title=row["title"],
-            year=row["year"],
-            duration=row["duration"],
-            description=row["description"]
-        )
-        session.add(movie)
+    # Prepare mappings for batch insert
+    movies_data = new_df[["imdb_title_id", "title", "year", "duration", "description"]].to_dict(orient="records")
+    prod_data = new_df[["imdb_title_id", "director", "writer", "production_company", "actors", "country", "language"]].to_dict(orient="records")
+    rating_data = new_df[["imdb_title_id", "avg_vote", "votes", "reviews_from_users", "reviews_from_critics"]].to_dict(orient="records")
 
-        prod = Production_Info(
-            imdb_title_id=row["imdb_title_id"],
-            director=row["director"],
-            writer=row["writer"],
-            production_company=row["production_company"],
-            actors=row["actors"],
-            country=row["country"],
-            language=row["language"]
-        )
-        session.add(prod)
-
-
-        rating = Rating_Info(
-            imdb_title_id=row["imdb_title_id"],
-            avg_vote=row["avg_vote"],
-            votes=row["votes"],
-            reviews_from_users=row["reviews_from_users"],
-            reviews_from_critics=row["reviews_from_critics"]
-        )
-        session.add(rating)
-
-    # Actualizar metadatos
+    # Bulk insert
+    session.bulk_insert_mappings(Movie_Info, movies_data)
+    session.bulk_insert_mappings(Production_Info, prod_data)
+    session.bulk_insert_mappings(Rating_Info, rating_data)
+    
+    # Update metadata
     if not new_df.empty:
+        # Get the most recent date from the new batch
+        max_date = new_df["date_published"].max()
         if last_loaded:
-            last_loaded.value = str(new_df["year"].max())
+            last_loaded.value = str(max_date.date())
         else:
-            session.add(EtlMetadata(key="last_year", value=str(new_df["year"].max())))
+            session.add(EtlMetadata(key="last_date", value=str(max_date.date())))

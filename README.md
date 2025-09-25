@@ -21,11 +21,11 @@ Before getting started, make sure you have installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/valinyourarea/VisualizationU1
+   git clone https://github.com/JoaquinMO17/Proyectos_Visualizacion
 
 ## Step 2: Navigate into the project folder
 
-    cd routetoyourrepositoryfolder/VisualizationU1
+    cd routetoyourrepositoryfolder/Proyectos_Visualizacion
 
 ## Step 3: Open Docker Desktop
 
