@@ -5,13 +5,15 @@ from models import Base, Movie_Info, Production_Info, Rating_Info, EtlMetadata
 from database import engine, get_db
 from mongodb_database import connect_to_mongo, close_mongo_connection, get_mongo_database
 from scripts.etl import run_etl
+from scripts.mongo_etl import run_mongo_etl
 from scripts.services.movie_service import MovieService
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 from scripts.services.production_service import ProductionService
 from scripts.services.rating_service import RatingService
-
 import json
+import time
+from datetime import datetime
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,6 +60,7 @@ def root():
             },
             "mongodb": {
                 "test_mongodb": "/test-mongodb",
+                "run_etl_mongo": "POST /run-etl-mongo",
                 "mongo_movies": "/mongo/movies",
                 "mongo_search": "/mongo/search",
                 "mongo_stats": "/mongo/stats",
@@ -87,18 +90,60 @@ def test_database(db: Session = Depends(get_db)):
 @app.post('/run-etl')
 def execute_etl():
     try:
+        print("\n" + "="*70)
+        print("STARTING POSTGRESQL ETL PROCESS")
+        print("="*70)
+        print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        start_time = time.time()
         run_etl()
-        return {'status': 'success', 'message': 'ETL process completed'}
+        total_time = time.time() - start_time
+        
+        print("\n" + "="*70)
+        print("POSTGRESQL ETL COMPLETED")
+        print(f"Total execution time: {total_time:.2f} seconds")
+        print("="*70 + "\n")
+        
+        return {
+            'status': 'success',
+            'database': 'PostgreSQL',
+            'message': 'ETL process completed',
+            'execution_time': f"{total_time:.2f} seconds"
+        }
     except Exception as e:
+        print(f"\nERROR in PostgreSQL ETL: {str(e)}\n")
         return {'status': 'error', 'message': str(e)}
 
 @app.post('/run-etl-async')
 def execute_etl_async(background_tasks: BackgroundTasks):
     try:
+        print("\n[BACKGROUND] Starting PostgreSQL ETL process...")
         background_tasks.add_task(run_etl)
         return {'status': 'success', 'message': 'ETL process started in background'}
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
+
+@app.post('/run-etl-mongo')
+def execute_mongo_etl():
+    """
+    Execute ETL process to load data into MongoDB with timing metrics
+    """
+    try:
+        result = run_mongo_etl()
+        return {
+            'status': result.get('status', 'unknown'),
+            'database': 'MongoDB',
+            'message': 'MongoDB ETL process completed',
+            'records_loaded': result.get('records_loaded', 0),
+            'execution_time': f"{result.get('execution_time', 0):.2f} seconds"
+        }
+    except Exception as e:
+        print(f"\nERROR in MongoDB ETL: {str(e)}\n")
+        return {
+            'status': 'error',
+            'database': 'MongoDB',
+            'message': str(e)
+        }
 
 @app.get('/movies')
 def get_movies(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
@@ -623,7 +668,6 @@ def get_rating_statistics_endpoint(db: Session = Depends(get_db)):
     """
     service = RatingService(db)
     return service.get_rating_statistics()
-
 
 
 

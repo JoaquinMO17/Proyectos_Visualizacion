@@ -22,7 +22,6 @@ async def connect_to_mongo():
     """
     Create asynchronous connection to MongoDB
     """
-    # Hardcoded MongoDB connection
     MONGO_URL = "mongodb://admin:admin123@mongodb:27017/movies_db?authSource=admin"
     
     mongodb.client = AsyncIOMotorClient(MONGO_URL)
@@ -39,7 +38,6 @@ def connect_to_mongo_sync():
     """
     Create synchronous connection to MongoDB
     """
-    # Hardcoded MongoDB connection
     MONGO_URL = "mongodb://admin:admin123@mongodb:27017/movies_db?authSource=admin"
     
     mongodb.sync_client = MongoClient(MONGO_URL)

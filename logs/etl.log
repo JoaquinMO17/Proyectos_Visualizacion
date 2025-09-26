@@ -1,0 +1,29 @@
+2025-09-26 00:44:02,889 - INFO - Starting ETL pipeline - PostgreSQL
+2025-09-26 00:44:02,890 - INFO - Process initiated at: 2025-09-26 00:44:02
+2025-09-26 00:44:02,890 - INFO - Phase 1: Data Extraction
+2025-09-26 00:44:05,792 - INFO - Extraction completed: 85736 rows processed
+2025-09-26 00:44:05,793 - INFO - Extraction time: 2.90s
+2025-09-26 00:44:05,793 - INFO - Average extraction rate: 29549 rows/second
+2025-09-26 00:44:05,795 - INFO - Phase 2: Data Transformation
+2025-09-26 00:44:08,979 - INFO - CSV to JSON conversion: 3.18s
+2025-09-26 00:44:16,995 - INFO - Data transformation and cleaning: 8.02s
+2025-09-26 00:44:21,103 - INFO - JSON to CSV back-conversion: 4.10s
+2025-09-26 00:44:21,109 - INFO - Total transformation time: 15.31s
+2025-09-26 00:44:21,115 - INFO - Phase 3: Data Validation
+2025-09-26 00:44:21,414 - INFO - Validation passed successfully
+2025-09-26 00:44:21,425 - INFO - Validation time: 299.40ms
+2025-09-26 00:44:21,434 - INFO - Records validated: 85736
+2025-09-26 00:44:21,446 - INFO - Phase 4: PostgreSQL Loading
+2025-09-26 00:44:42,283 - INFO - PostgreSQL load completed: 20.84s
+2025-09-26 00:44:42,284 - INFO - PostgreSQL throughput: 4115 records/second
+2025-09-26 00:44:42,286 - INFO - ETL Pipeline Completed Successfully
+2025-09-26 00:44:42,287 - INFO - ==================================================
+2025-09-26 00:44:42,288 - INFO - PERFORMANCE SUMMARY:
+2025-09-26 00:44:42,289 - INFO -   Total pipeline duration: 39.40s
+2025-09-26 00:44:42,290 - INFO -   Extraction phase: 2.90s (7.4%)
+2025-09-26 00:44:42,292 - INFO -   Transformation phase: 15.31s (38.9%)
+2025-09-26 00:44:42,293 - INFO -   Validation phase: 299.40ms (0.8%)
+2025-09-26 00:44:42,294 - INFO -   PostgreSQL load: 20.84s (52.9%)
+2025-09-26 00:44:42,296 - INFO -   Total records processed: 85736
+2025-09-26 00:44:42,297 - INFO -   Overall throughput: 2176.2 records/second
+2025-09-26 00:44:42,299 - INFO - ==================================================
