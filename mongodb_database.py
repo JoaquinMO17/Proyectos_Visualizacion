@@ -1,6 +1,3 @@
-"""
-MongoDB connection module - coexists with PostgreSQL
-"""
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 import os
