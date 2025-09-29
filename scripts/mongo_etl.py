@@ -111,7 +111,7 @@ def run_mongo_etl():
         print(f"  Time: {format_duration(extract_time)}")
         print(f"  Throughput: {len(df)/extract_time:.0f} records/second")
         
-        # === TRANSFORM PHASE ===
+        # === TRANSFORM PHASE ==
         print("\n" + "-"*50)
         print("Phase 2: DATA TRANSFORMATION")
         print("-"*50)

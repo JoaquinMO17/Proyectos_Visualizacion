@@ -106,7 +106,7 @@ def run_etl():
         log_event(f"PostgreSQL load completed: {format_duration(sql_load_duration)}")
         log_event(f"PostgreSQL throughput: {len(tables['full'])/sql_load_duration:.0f} records/second")
         
-        # === PIPELINE SUMMARY ===
+        # === PIPELINE SUMMARY ==
         total_duration = time.time() - total_start_time
         log_event("ETL Pipeline Completed Successfully")
         log_event("=" * 50)
