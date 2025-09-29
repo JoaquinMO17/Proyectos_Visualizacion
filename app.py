@@ -30,10 +30,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins like ["http://localhost:3000"]
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,7 +70,7 @@ def root():
         }
     }
 
-# ============= PostgreSQL Endpoints (Original) =============
+# ============= PostgreSQL Endpoints =============
 
 @app.get('/test-db')
 def test_database(db: Session = Depends(get_db)):
@@ -192,7 +191,7 @@ def search_movies(
         min_rating=min_rating
     )
 
-# ============= MongoDB Endpoints (New) =============
+# ============= MongoDB Endpoints =============
 
 @app.get('/test-mongodb')
 async def test_mongodb():
