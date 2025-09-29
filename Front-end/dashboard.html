@@ -10,7 +10,7 @@
 
 <style>
   :root{
-    /* Tema claro pastel, plano */
+    /* Esto es para hacerlo pastel claro */
     --bg:#fafbff;
     --panel:#ffffff;
     --border:#e9edf4;
@@ -107,14 +107,14 @@
   tbody tr.selected{background:var(--pastel-mint)}
   tbody tr:hover{background:#f8fafc}
 
-  /* sin animaciones globales */
+  /*  */
   .card, .nav a, button, input, select{transition:none}
 </style>
 </head>
 <body>
 <div class="shell">
 
-  <!-- Sidebar (decorativo) -->
+  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">
@@ -264,7 +264,7 @@
   const API_BASE = 'http://localhost:8000';
   Chart.defaults.animation = false; // sin animaciones
 
-  /* ---------- ICONOS sencillos para KPIs ---------- */
+  /* ---------- ICONOS para KPIs ---------- */
   const ICON = {
     star:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"/></svg>`,
     users:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`,
