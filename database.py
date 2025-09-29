@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv
 
-# Leer la URL de conexión desde .env
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
