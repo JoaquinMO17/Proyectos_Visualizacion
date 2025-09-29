@@ -2,7 +2,7 @@
 2025-09-26 00:44:02,890 - INFO - Process initiated at: 2025-09-26 00:44:02
 2025-09-26 00:44:02,890 - INFO - Phase 1: Data Extraction
 2025-09-26 00:44:05,792 - INFO - Extraction completed: 85736 rows processed
-2025-09-26 00:44:05,793 - INFO - Extraction time: 2.90s
+2025-09-26 00:44:05,793 - INFO - Extraction time: 2.90s EE
 2025-09-26 00:44:05,793 - INFO - Average extraction rate: 29549 rows/second
 2025-09-26 00:44:05,795 - INFO - Phase 2: Data Transformation
 2025-09-26 00:44:08,979 - INFO - CSV to JSON conversion: 3.18s
