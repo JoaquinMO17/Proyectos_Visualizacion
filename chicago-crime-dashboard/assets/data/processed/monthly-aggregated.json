@@ -1,0 +1,632 @@
+[
+  {
+    "date": "2020-01",
+    "total_crimes": 19912,
+    "arrests": 4533,
+    "domestic": 3857,
+    "arrest_rate": 22.77,
+    "domestic_rate": 19.37,
+    "moving_avg_3m": 19912.0
+  },
+  {
+    "date": "2020-02",
+    "total_crimes": 18217,
+    "arrests": 4192,
+    "domestic": 3559,
+    "arrest_rate": 23.01,
+    "domestic_rate": 19.54,
+    "moving_avg_3m": 19064.5
+  },
+  {
+    "date": "2020-03",
+    "total_crimes": 16790,
+    "arrests": 3125,
+    "domestic": 3895,
+    "arrest_rate": 18.61,
+    "domestic_rate": 23.2,
+    "moving_avg_3m": 18306.33
+  },
+  {
+    "date": "2020-04",
+    "total_crimes": 12953,
+    "arrests": 1472,
+    "domestic": 3188,
+    "arrest_rate": 11.36,
+    "domestic_rate": 24.61,
+    "moving_avg_3m": 15986.67
+  },
+  {
+    "date": "2020-05",
+    "total_crimes": 17629,
+    "arrests": 2611,
+    "domestic": 3830,
+    "arrest_rate": 14.81,
+    "domestic_rate": 21.73,
+    "moving_avg_3m": 15790.67
+  },
+  {
+    "date": "2020-06",
+    "total_crimes": 17707,
+    "arrests": 2345,
+    "domestic": 4320,
+    "arrest_rate": 13.24,
+    "domestic_rate": 24.4,
+    "moving_avg_3m": 16096.33
+  },
+  {
+    "date": "2020-07",
+    "total_crimes": 19684,
+    "arrests": 2800,
+    "domestic": 4562,
+    "arrest_rate": 14.22,
+    "domestic_rate": 23.18,
+    "moving_avg_3m": 18340.0
+  },
+  {
+    "date": "2020-08",
+    "total_crimes": 19943,
+    "arrests": 3017,
+    "domestic": 4392,
+    "arrest_rate": 15.13,
+    "domestic_rate": 22.02,
+    "moving_avg_3m": 19111.33
+  },
+  {
+    "date": "2020-09",
+    "total_crimes": 17976,
+    "arrests": 2733,
+    "domestic": 3874,
+    "arrest_rate": 15.2,
+    "domestic_rate": 21.55,
+    "moving_avg_3m": 19201.0
+  },
+  {
+    "date": "2020-10",
+    "total_crimes": 18474,
+    "arrests": 2607,
+    "domestic": 3727,
+    "arrest_rate": 14.11,
+    "domestic_rate": 20.17,
+    "moving_avg_3m": 18797.67
+  },
+  {
+    "date": "2020-11",
+    "total_crimes": 16670,
+    "arrests": 2426,
+    "domestic": 3585,
+    "arrest_rate": 14.55,
+    "domestic_rate": 21.51,
+    "moving_avg_3m": 17706.67
+  },
+  {
+    "date": "2020-12",
+    "total_crimes": 16543,
+    "arrests": 2323,
+    "domestic": 3466,
+    "arrest_rate": 14.04,
+    "domestic_rate": 20.95,
+    "moving_avg_3m": 17229.0
+  },
+  {
+    "date": "2021-01",
+    "total_crimes": 16287,
+    "arrests": 2315,
+    "domestic": 3689,
+    "arrest_rate": 14.21,
+    "domestic_rate": 22.65,
+    "moving_avg_3m": 16500.0
+  },
+  {
+    "date": "2021-02",
+    "total_crimes": 13148,
+    "arrests": 2067,
+    "domestic": 3050,
+    "arrest_rate": 15.72,
+    "domestic_rate": 23.2,
+    "moving_avg_3m": 15326.0
+  },
+  {
+    "date": "2021-03",
+    "total_crimes": 16202,
+    "arrests": 2632,
+    "domestic": 3888,
+    "arrest_rate": 16.24,
+    "domestic_rate": 24.0,
+    "moving_avg_3m": 15212.33
+  },
+  {
+    "date": "2021-04",
+    "total_crimes": 15697,
+    "arrests": 2244,
+    "domestic": 4013,
+    "arrest_rate": 14.3,
+    "domestic_rate": 25.57,
+    "moving_avg_3m": 15015.67
+  },
+  {
+    "date": "2021-05",
+    "total_crimes": 17878,
+    "arrests": 2602,
+    "domestic": 4538,
+    "arrest_rate": 14.55,
+    "domestic_rate": 25.38,
+    "moving_avg_3m": 16592.33
+  },
+  {
+    "date": "2021-06",
+    "total_crimes": 18888,
+    "arrests": 2447,
+    "domestic": 4527,
+    "arrest_rate": 12.96,
+    "domestic_rate": 23.97,
+    "moving_avg_3m": 17487.67
+  },
+  {
+    "date": "2021-07",
+    "total_crimes": 19304,
+    "arrests": 2323,
+    "domestic": 4419,
+    "arrest_rate": 12.03,
+    "domestic_rate": 22.89,
+    "moving_avg_3m": 18690.0
+  },
+  {
+    "date": "2021-08",
+    "total_crimes": 18630,
+    "arrests": 2041,
+    "domestic": 4327,
+    "arrest_rate": 10.96,
+    "domestic_rate": 23.23,
+    "moving_avg_3m": 18940.67
+  },
+  {
+    "date": "2021-09",
+    "total_crimes": 19296,
+    "arrests": 2105,
+    "domestic": 4141,
+    "arrest_rate": 10.91,
+    "domestic_rate": 21.46,
+    "moving_avg_3m": 19076.67
+  },
+  {
+    "date": "2021-10",
+    "total_crimes": 19409,
+    "arrests": 1998,
+    "domestic": 3929,
+    "arrest_rate": 10.29,
+    "domestic_rate": 20.24,
+    "moving_avg_3m": 19111.67
+  },
+  {
+    "date": "2021-11",
+    "total_crimes": 17477,
+    "arrests": 1990,
+    "domestic": 3621,
+    "arrest_rate": 11.39,
+    "domestic_rate": 20.72,
+    "moving_avg_3m": 18727.33
+  },
+  {
+    "date": "2021-12",
+    "total_crimes": 17379,
+    "arrests": 1874,
+    "domestic": 3772,
+    "arrest_rate": 10.78,
+    "domestic_rate": 21.7,
+    "moving_avg_3m": 18088.33
+  },
+  {
+    "date": "2022-01",
+    "total_crimes": 15741,
+    "arrests": 1813,
+    "domestic": 3384,
+    "arrest_rate": 11.52,
+    "domestic_rate": 21.5,
+    "moving_avg_3m": 16865.67
+  },
+  {
+    "date": "2022-02",
+    "total_crimes": 15286,
+    "arrests": 2164,
+    "domestic": 3132,
+    "arrest_rate": 14.16,
+    "domestic_rate": 20.49,
+    "moving_avg_3m": 16135.33
+  },
+  {
+    "date": "2022-03",
+    "total_crimes": 18439,
+    "arrests": 2345,
+    "domestic": 3739,
+    "arrest_rate": 12.72,
+    "domestic_rate": 20.28,
+    "moving_avg_3m": 16488.67
+  },
+  {
+    "date": "2022-04",
+    "total_crimes": 18072,
+    "arrests": 2459,
+    "domestic": 3833,
+    "arrest_rate": 13.61,
+    "domestic_rate": 21.21,
+    "moving_avg_3m": 17265.67
+  },
+  {
+    "date": "2022-05",
+    "total_crimes": 20220,
+    "arrests": 2888,
+    "domestic": 4164,
+    "arrest_rate": 14.28,
+    "domestic_rate": 20.59,
+    "moving_avg_3m": 18910.33
+  },
+  {
+    "date": "2022-06",
+    "total_crimes": 20858,
+    "arrests": 2600,
+    "domestic": 4171,
+    "arrest_rate": 12.47,
+    "domestic_rate": 20.0,
+    "moving_avg_3m": 19716.67
+  },
+  {
+    "date": "2022-07",
+    "total_crimes": 22350,
+    "arrests": 2483,
+    "domestic": 4157,
+    "arrest_rate": 11.11,
+    "domestic_rate": 18.6,
+    "moving_avg_3m": 21142.67
+  },
+  {
+    "date": "2022-08",
+    "total_crimes": 22387,
+    "arrests": 2541,
+    "domestic": 4078,
+    "arrest_rate": 11.35,
+    "domestic_rate": 18.22,
+    "moving_avg_3m": 21865.0
+  },
+  {
+    "date": "2022-09",
+    "total_crimes": 22418,
+    "arrests": 2479,
+    "domestic": 3745,
+    "arrest_rate": 11.06,
+    "domestic_rate": 16.71,
+    "moving_avg_3m": 22385.0
+  },
+  {
+    "date": "2022-10",
+    "total_crimes": 23277,
+    "arrests": 2300,
+    "domestic": 3759,
+    "arrest_rate": 9.88,
+    "domestic_rate": 16.15,
+    "moving_avg_3m": 22694.0
+  },
+  {
+    "date": "2022-11",
+    "total_crimes": 20876,
+    "arrests": 2026,
+    "domestic": 3404,
+    "arrest_rate": 9.7,
+    "domestic_rate": 16.31,
+    "moving_avg_3m": 22190.33
+  },
+  {
+    "date": "2022-12",
+    "total_crimes": 19998,
+    "arrests": 2110,
+    "domestic": 3408,
+    "arrest_rate": 10.55,
+    "domestic_rate": 17.04,
+    "moving_avg_3m": 21383.67
+  },
+  {
+    "date": "2023-01",
+    "total_crimes": 21305,
+    "arrests": 2679,
+    "domestic": 3768,
+    "arrest_rate": 12.57,
+    "domestic_rate": 17.69,
+    "moving_avg_3m": 20726.33
+  },
+  {
+    "date": "2023-02",
+    "total_crimes": 18478,
+    "arrests": 2537,
+    "domestic": 3309,
+    "arrest_rate": 13.73,
+    "domestic_rate": 17.91,
+    "moving_avg_3m": 19927.0
+  },
+  {
+    "date": "2023-03",
+    "total_crimes": 20797,
+    "arrests": 2660,
+    "domestic": 3661,
+    "arrest_rate": 12.79,
+    "domestic_rate": 17.6,
+    "moving_avg_3m": 20193.33
+  },
+  {
+    "date": "2023-04",
+    "total_crimes": 20796,
+    "arrests": 2500,
+    "domestic": 3936,
+    "arrest_rate": 12.02,
+    "domestic_rate": 18.93,
+    "moving_avg_3m": 20023.67
+  },
+  {
+    "date": "2023-05",
+    "total_crimes": 22272,
+    "arrests": 2682,
+    "domestic": 4105,
+    "arrest_rate": 12.04,
+    "domestic_rate": 18.43,
+    "moving_avg_3m": 21288.33
+  },
+  {
+    "date": "2023-06",
+    "total_crimes": 22748,
+    "arrests": 2717,
+    "domestic": 4176,
+    "arrest_rate": 11.94,
+    "domestic_rate": 18.36,
+    "moving_avg_3m": 21938.67
+  },
+  {
+    "date": "2023-07",
+    "total_crimes": 24053,
+    "arrests": 2877,
+    "domestic": 4547,
+    "arrest_rate": 11.96,
+    "domestic_rate": 18.9,
+    "moving_avg_3m": 23024.33
+  },
+  {
+    "date": "2023-08",
+    "total_crimes": 24218,
+    "arrests": 2878,
+    "domestic": 4171,
+    "arrest_rate": 11.88,
+    "domestic_rate": 17.22,
+    "moving_avg_3m": 23673.0
+  },
+  {
+    "date": "2023-09",
+    "total_crimes": 22647,
+    "arrests": 2692,
+    "domestic": 3983,
+    "arrest_rate": 11.89,
+    "domestic_rate": 17.59,
+    "moving_avg_3m": 23639.33
+  },
+  {
+    "date": "2023-10",
+    "total_crimes": 23091,
+    "arrests": 2715,
+    "domestic": 3919,
+    "arrest_rate": 11.76,
+    "domestic_rate": 16.97,
+    "moving_avg_3m": 23318.67
+  },
+  {
+    "date": "2023-11",
+    "total_crimes": 21418,
+    "arrests": 2613,
+    "domestic": 3680,
+    "arrest_rate": 12.2,
+    "domestic_rate": 17.18,
+    "moving_avg_3m": 22385.33
+  },
+  {
+    "date": "2023-12",
+    "total_crimes": 21321,
+    "arrests": 2585,
+    "domestic": 3791,
+    "arrest_rate": 12.12,
+    "domestic_rate": 17.78,
+    "moving_avg_3m": 21943.33
+  },
+  {
+    "date": "2024-01",
+    "total_crimes": 19616,
+    "arrests": 2970,
+    "domestic": 3644,
+    "arrest_rate": 15.14,
+    "domestic_rate": 18.58,
+    "moving_avg_3m": 20785.0
+  },
+  {
+    "date": "2024-02",
+    "total_crimes": 19933,
+    "arrests": 2880,
+    "domestic": 3616,
+    "arrest_rate": 14.45,
+    "domestic_rate": 18.14,
+    "moving_avg_3m": 20290.0
+  },
+  {
+    "date": "2024-03",
+    "total_crimes": 20901,
+    "arrests": 2979,
+    "domestic": 3837,
+    "arrest_rate": 14.25,
+    "domestic_rate": 18.36,
+    "moving_avg_3m": 20150.0
+  },
+  {
+    "date": "2024-04",
+    "total_crimes": 20467,
+    "arrests": 2712,
+    "domestic": 3865,
+    "arrest_rate": 13.25,
+    "domestic_rate": 18.88,
+    "moving_avg_3m": 20433.67
+  },
+  {
+    "date": "2024-05",
+    "total_crimes": 22975,
+    "arrests": 2929,
+    "domestic": 4412,
+    "arrest_rate": 12.75,
+    "domestic_rate": 19.2,
+    "moving_avg_3m": 21447.67
+  },
+  {
+    "date": "2024-06",
+    "total_crimes": 23162,
+    "arrests": 2926,
+    "domestic": 4320,
+    "arrest_rate": 12.63,
+    "domestic_rate": 18.65,
+    "moving_avg_3m": 22201.33
+  },
+  {
+    "date": "2024-07",
+    "total_crimes": 24077,
+    "arrests": 3413,
+    "domestic": 4386,
+    "arrest_rate": 14.18,
+    "domestic_rate": 18.22,
+    "moving_avg_3m": 23404.67
+  },
+  {
+    "date": "2024-08",
+    "total_crimes": 22963,
+    "arrests": 3024,
+    "domestic": 3959,
+    "arrest_rate": 13.17,
+    "domestic_rate": 17.24,
+    "moving_avg_3m": 23400.67
+  },
+  {
+    "date": "2024-09",
+    "total_crimes": 22943,
+    "arrests": 3030,
+    "domestic": 4163,
+    "arrest_rate": 13.21,
+    "domestic_rate": 18.14,
+    "moving_avg_3m": 23327.67
+  },
+  {
+    "date": "2024-10",
+    "total_crimes": 22453,
+    "arrests": 2983,
+    "domestic": 3942,
+    "arrest_rate": 13.29,
+    "domestic_rate": 17.56,
+    "moving_avg_3m": 22786.33
+  },
+  {
+    "date": "2024-11",
+    "total_crimes": 19707,
+    "arrests": 2907,
+    "domestic": 3585,
+    "arrest_rate": 14.75,
+    "domestic_rate": 18.19,
+    "moving_avg_3m": 21701.0
+  },
+  {
+    "date": "2024-12",
+    "total_crimes": 19566,
+    "arrests": 2923,
+    "domestic": 3823,
+    "arrest_rate": 14.94,
+    "domestic_rate": 19.54,
+    "moving_avg_3m": 20575.33
+  },
+  {
+    "date": "2025-01",
+    "total_crimes": 18419,
+    "arrests": 3322,
+    "domestic": 3482,
+    "arrest_rate": 18.04,
+    "domestic_rate": 18.9,
+    "moving_avg_3m": 19230.67
+  },
+  {
+    "date": "2025-02",
+    "total_crimes": 16465,
+    "arrests": 3099,
+    "domestic": 3066,
+    "arrest_rate": 18.82,
+    "domestic_rate": 18.62,
+    "moving_avg_3m": 18150.0
+  },
+  {
+    "date": "2025-03",
+    "total_crimes": 19685,
+    "arrests": 3447,
+    "domestic": 3866,
+    "arrest_rate": 17.51,
+    "domestic_rate": 19.64,
+    "moving_avg_3m": 18189.67
+  },
+  {
+    "date": "2025-04",
+    "total_crimes": 19557,
+    "arrests": 3208,
+    "domestic": 3802,
+    "arrest_rate": 16.4,
+    "domestic_rate": 19.44,
+    "moving_avg_3m": 18569.0
+  },
+  {
+    "date": "2025-05",
+    "total_crimes": 20376,
+    "arrests": 3188,
+    "domestic": 4030,
+    "arrest_rate": 15.65,
+    "domestic_rate": 19.78,
+    "moving_avg_3m": 19872.67
+  },
+  {
+    "date": "2025-06",
+    "total_crimes": 20985,
+    "arrests": 3086,
+    "domestic": 4200,
+    "arrest_rate": 14.71,
+    "domestic_rate": 20.01,
+    "moving_avg_3m": 20306.0
+  },
+  {
+    "date": "2025-07",
+    "total_crimes": 22472,
+    "arrests": 3451,
+    "domestic": 4182,
+    "arrest_rate": 15.36,
+    "domestic_rate": 18.61,
+    "moving_avg_3m": 21277.67
+  },
+  {
+    "date": "2025-08",
+    "total_crimes": 21057,
+    "arrests": 3082,
+    "domestic": 3922,
+    "arrest_rate": 14.64,
+    "domestic_rate": 18.63,
+    "moving_avg_3m": 21504.67
+  },
+  {
+    "date": "2025-09",
+    "total_crimes": 19868,
+    "arrests": 2911,
+    "domestic": 3660,
+    "arrest_rate": 14.65,
+    "domestic_rate": 18.42,
+    "moving_avg_3m": 21132.33
+  },
+  {
+    "date": "2025-10",
+    "total_crimes": 9043,
+    "arrests": 1262,
+    "domestic": 1638,
+    "arrest_rate": 13.96,
+    "domestic_rate": 18.11,
+    "moving_avg_3m": 16656.0
+  }
+]

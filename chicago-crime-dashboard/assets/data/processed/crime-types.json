@@ -1,0 +1,319 @@
+{
+  "summary": {
+    "total_types": 33,
+    "top_crimes": [
+      {
+        "crime_type": "THEFT",
+        "count": 298686,
+        "percentage": 21.77
+      },
+      {
+        "crime_type": "BATTERY",
+        "count": 247380,
+        "percentage": 18.03
+      },
+      {
+        "crime_type": "CRIMINAL DAMAGE",
+        "count": 156553,
+        "percentage": 11.41
+      },
+      {
+        "crime_type": "ASSAULT",
+        "count": 122938,
+        "percentage": 8.96
+      },
+      {
+        "crime_type": "MOTOR VEHICLE THEFT",
+        "count": 106350,
+        "percentage": 7.75
+      },
+      {
+        "crime_type": "DECEPTIVE PRACTICE",
+        "count": 98399,
+        "percentage": 7.17
+      },
+      {
+        "crime_type": "OTHER OFFENSE",
+        "count": 87308,
+        "percentage": 6.36
+      },
+      {
+        "crime_type": "ROBBERY",
+        "count": 49691,
+        "percentage": 3.62
+      },
+      {
+        "crime_type": "WEAPONS VIOLATION",
+        "count": 47246,
+        "percentage": 3.44
+      },
+      {
+        "crime_type": "BURGLARY",
+        "count": 46324,
+        "percentage": 3.38
+      }
+    ]
+  },
+  "trends": {
+    "THEFT": [
+      {
+        "Year": 2020,
+        "count": 41340
+      },
+      {
+        "Year": 2021,
+        "count": 40821
+      },
+      {
+        "Year": 2022,
+        "count": 54899
+      },
+      {
+        "Year": 2023,
+        "count": 57494
+      },
+      {
+        "Year": 2024,
+        "count": 60517
+      },
+      {
+        "Year": 2025,
+        "count": 43615
+      }
+    ],
+    "BATTERY": [
+      {
+        "Year": 2020,
+        "count": 41516
+      },
+      {
+        "Year": 2021,
+        "count": 40483
+      },
+      {
+        "Year": 2022,
+        "count": 40962
+      },
+      {
+        "Year": 2023,
+        "count": 44250
+      },
+      {
+        "Year": 2024,
+        "count": 46126
+      },
+      {
+        "Year": 2025,
+        "count": 34043
+      }
+    ],
+    "CRIMINAL DAMAGE": [
+      {
+        "Year": 2020,
+        "count": 24881
+      },
+      {
+        "Year": 2021,
+        "count": 25095
+      },
+      {
+        "Year": 2022,
+        "count": 27250
+      },
+      {
+        "Year": 2023,
+        "count": 30093
+      },
+      {
+        "Year": 2024,
+        "count": 28555
+      },
+      {
+        "Year": 2025,
+        "count": 20679
+      }
+    ],
+    "ASSAULT": [
+      {
+        "Year": 2020,
+        "count": 18257
+      },
+      {
+        "Year": 2021,
+        "count": 20344
+      },
+      {
+        "Year": 2022,
+        "count": 20813
+      },
+      {
+        "Year": 2023,
+        "count": 22629
+      },
+      {
+        "Year": 2024,
+        "count": 23474
+      },
+      {
+        "Year": 2025,
+        "count": 17421
+      }
+    ],
+    "MOTOR VEHICLE THEFT": [
+      {
+        "Year": 2020,
+        "count": 9962
+      },
+      {
+        "Year": 2021,
+        "count": 10605
+      },
+      {
+        "Year": 2022,
+        "count": 21472
+      },
+      {
+        "Year": 2023,
+        "count": 29255
+      },
+      {
+        "Year": 2024,
+        "count": 21713
+      },
+      {
+        "Year": 2025,
+        "count": 13343
+      }
+    ],
+    "DECEPTIVE PRACTICE": [
+      {
+        "Year": 2020,
+        "count": 18533
+      },
+      {
+        "Year": 2021,
+        "count": 17897
+      },
+      {
+        "Year": 2022,
+        "count": 17086
+      },
+      {
+        "Year": 2023,
+        "count": 17424
+      },
+      {
+        "Year": 2024,
+        "count": 16095
+      },
+      {
+        "Year": 2025,
+        "count": 11364
+      }
+    ],
+    "OTHER OFFENSE": [
+      {
+        "Year": 2020,
+        "count": 12604
+      },
+      {
+        "Year": 2021,
+        "count": 13959
+      },
+      {
+        "Year": 2022,
+        "count": 14620
+      },
+      {
+        "Year": 2023,
+        "count": 15722
+      },
+      {
+        "Year": 2024,
+        "count": 17103
+      },
+      {
+        "Year": 2025,
+        "count": 13300
+      }
+    ],
+    "ROBBERY": [
+      {
+        "Year": 2020,
+        "count": 7855
+      },
+      {
+        "Year": 2021,
+        "count": 7920
+      },
+      {
+        "Year": 2022,
+        "count": 8965
+      },
+      {
+        "Year": 2023,
+        "count": 11052
+      },
+      {
+        "Year": 2024,
+        "count": 9116
+      },
+      {
+        "Year": 2025,
+        "count": 4783
+      }
+    ],
+    "WEAPONS VIOLATION": [
+      {
+        "Year": 2020,
+        "count": 8432
+      },
+      {
+        "Year": 2021,
+        "count": 8979
+      },
+      {
+        "Year": 2022,
+        "count": 8781
+      },
+      {
+        "Year": 2023,
+        "count": 8608
+      },
+      {
+        "Year": 2024,
+        "count": 7839
+      },
+      {
+        "Year": 2025,
+        "count": 4607
+      }
+    ],
+    "BURGLARY": [
+      {
+        "Year": 2020,
+        "count": 8757
+      },
+      {
+        "Year": 2021,
+        "count": 6661
+      },
+      {
+        "Year": 2022,
+        "count": 7594
+      },
+      {
+        "Year": 2023,
+        "count": 7487
+      },
+      {
+        "Year": 2024,
+        "count": 8427
+      },
+      {
+        "Year": 2025,
+        "count": 7398
+      }
+    ]
+  }
+}
