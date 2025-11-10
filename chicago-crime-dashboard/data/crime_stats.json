@@ -1,0 +1,15 @@
+{
+  "total_crimes": 1348011,
+  "top_crime_type": "THEFT",
+  "top_crime_count": 292810,
+  "top_crime_percentage": 21.7,
+  "top_location": "STREET",
+  "top_location_count": 364602,
+  "top_location_percentage": 27.0,
+  "street_crimes": 364602,
+  "residence_crimes": 183044,
+  "apartment_crimes": 256983,
+  "sidewalk_crimes": 73609,
+  "total_arrests": 182843,
+  "arrest_rate": 13.6
+}
