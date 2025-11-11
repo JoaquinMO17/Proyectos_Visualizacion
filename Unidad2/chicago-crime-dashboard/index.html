@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicago Crime Analytics Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <!-- Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <h1>Chicago Crime Analytics Dashboard</h1>
+            <p class="subtitle">Integral Analysis (2020-2025)</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            
+            <!-- Stats Cards Section -->
+            <section class="chart-section full-width">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">Top Crime Type</h3>
+                            <p class="stat-value" id="topCrimeType">-</p>
+                            <p class="stat-subtitle" id="topCrimeSubtitle">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-card-alt1">
+                        <div class="stat-icon">📍</div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">Most Common Location</h3>
+                            <p class="stat-value" id="topLocation">-</p>
+                            <p class="stat-subtitle" id="topLocationSubtitle">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-card-alt2">
+                        <div class="stat-icon">🏙️</div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">Street Crimes</h3>
+                            <p class="stat-value" id="streetCrimes">-</p>
+                            <p class="stat-subtitle">Public areas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-card-alt3">
+                        <div class="stat-icon">🏠</div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">Residence Crimes</h3>
+                            <p class="stat-value" id="residenceCrimes">-</p>
+                            <p class="stat-subtitle">Homes & apartments</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-card-alt4">
+                        <div class="stat-icon">👮</div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">Arrest Rate</h3>
+                            <p class="stat-value" id="arrestRate">-</p>
+                            <p class="stat-subtitle" id="arrestSubtitle">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-card-alt5">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">Total Crimes</h3>
+                            <p class="stat-value" id="totalCrimes">-</p>
+                            <p class="stat-subtitle">All records analyzed</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Chart 1: Overall Monthly Trend -->
+            <section class="chart-section full-width">
+                <div class="chart-card">
+                    <h2 class="chart-title">Monthly Crime Trend in Chicago (2020-2025)</h2>
+                    <p class="chart-description">Real data with 3-month moving average and trend line</p>
+                    <div class="chart-container">
+                        <canvas id="overallTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart 2: Top 5 Community Areas -->
+            <section class="chart-section full-width">
+                <div class="chart-card">
+                    <h2 class="chart-title">Monthly Evolution of Top 5 Community Areas</h2>
+                    <p class="chart-description">Areas with highest total crime counts</p>
+                    <div class="chart-container">
+                        <canvas id="top5CommunitiesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart 3: Crime Type Breakdown (Sunburst) -->
+            <section class="chart-section full-width">
+                <div class="chart-card">
+                    <h2 class="chart-title">Crime Type Breakdown: Arrest and Domestic Status</h2>
+                    <p class="chart-description">Hierarchical view of crime types, arrest outcomes, and domestic incidents</p>
+                    <div class="chart-container" style="height: 600px;">
+                        <div id="sunburstChart" style="width: 100%; height: 100%;"></div>
+                    </div>
+                    <div class="insights-box">
+                        <h3>Key Insights:</h3>
+                        <ul id="sunburstInsights"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart 4: Hourly Patterns -->
+            <section class="chart-section full-width">
+                <div class="chart-card">
+                    <h2 class="chart-title">Hourly Patterns of Top 10 Crime Types</h2>
+                    <p class="chart-description">Crime occurrence patterns throughout the day with peak hours marked</p>
+                    <div class="chart-container" style="height: 500px;">
+                        <canvas id="hourlyPatternsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart 5: Crime Distribution Map -->
+            <section class="chart-section full-width">
+                <div class="chart-card">
+                    <h2 class="chart-title">Crime Distribution by Community Area</h2>
+                    <p class="chart-description" id="mapDescription">Total crimes across Chicago's 77 community areas (2020-2025)</p>
+                    <div class="map-container" id="crimeMap"></div>
+                </div>
+            </section>
+
+            <!-- Chart 6: Safety Risk Clustering -->
+            <section class="chart-section full-width">
+                <div class="chart-card">
+                    <h2 class="chart-title">Community Safety Risk Levels</h2>
+                    <p class="chart-description">K-means clustering based on crime patterns and severity</p>
+                    <div class="map-container" id="clusterMap"></div>
+                    <div class="legend-container">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #8B0000;"></span>
+                            <span>Very High Risk</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #DC143C;"></span>
+                            <span>High Risk</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #FF8C00;"></span>
+                            <span>Moderate Risk</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #4682B4;"></span>
+                            <span>Low Risk</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #000080;"></span>
+                            <span>Very Low Risk</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>Data Source: Chicago Police Department | Analysis Period: 2020-2025 | 1.37M Records</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+</body>
+</html>
